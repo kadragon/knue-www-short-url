@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>KNUE 단축 URL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sqids/0.3.0/sqids.min.js"></script>
+</head>
+
+<body>
+    <div id="result"></div>
+
+    <script type="module">
+        import { getParams, encodeURL, decodeURL } from './src/index.js';
+
+        window.onload = function () {
+            const paramsArr = window.location.search.substring(1).split('&');
+            if (paramsArr.length === 1 && paramsArr[0]) {
+                // decode 모드
+                const code = paramsArr[0];
+                const url = decodeURL(code);
+
+                if (url) {
+                    window.location.href = url;
+                } else {
+                    document.getElementById('result').innerText = "잘못된 코드입니다.";
+                }
+            } else {
+                // encode 모드
+                const params = getParams();
+                const code = encodeURL({
+                    site: params.site,
+                    key: parseInt(params.key),
+                    bbsNo: parseInt(params.bbsNo),
+                    nttNo: parseInt(params.nttNo)
+                });
+
+                if (code) {
+                    document.getElementById('result').innerText =
+                        `${window.location.origin}${window.location.pathname}?${code}`;
+                } else {
+                    document.getElementById('result').innerText = "오류가 발생하였습니다.";
+                }
+            }
+        };
+    </script>
+</body>
+
+</html>
