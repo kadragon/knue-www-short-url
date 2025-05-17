@@ -15,10 +15,7 @@
 
         window.onload = function () {
             const paramsArr = window.location.search.substring(1).split('&');
-            if (
-                paramsArr.length === 1 &&
-                /^[a-zA-Z0-9]{8,}$/.test(paramsArr[0])
-            ) {
+            if (paramsArr.length === 1 && paramsArr[0]) {
                 // decode 모드
                 const code = paramsArr[0];
                 const url = decodeURL(code);
@@ -29,7 +26,7 @@
                     document.getElementById('result').innerText = "잘못된 코드입니다.";
                 }
             } else {
-                // encode 모드 (기존 파라미터 방식 그대로)
+                // encode 모드
                 const params = getParams();
                 const code = encodeURL({
                     site: params.site,

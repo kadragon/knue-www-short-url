@@ -10,15 +10,7 @@ const sqids = new window.Sqids();
  * @returns {Object} 파싱된 쿼리 파라미터 객체
  */
 export function getParams() {
-  const params = {};
-  window.location.search
-    .substring(1)
-    .split("&")
-    .forEach((pair) => {
-      const [k, v] = pair.split("=");
-      params[k] = v;
-    });
-  return params;
+  return Object.fromEntries(new URLSearchParams(window.location.search));
 }
 
 /**
