@@ -31,9 +31,9 @@ describe("URL Encoding/Decoding", () => {
 
     // Verify all original data is preserved
     const preservedData = {
-      key: parseInt(url.searchParams.get("key")),
-      bbsNo: parseInt(url.searchParams.get("bbsNo")),
-      nttNo: parseInt(url.searchParams.get("nttNo")),
+      key: parseInt(url.searchParams.get("key"), 10),
+      bbsNo: parseInt(url.searchParams.get("bbsNo"), 10),
+      nttNo: parseInt(url.searchParams.get("nttNo"), 10),
     };
     expect(preservedData.key).toBe(originalData.key);
     expect(preservedData.bbsNo).toBe(originalData.bbsNo);
