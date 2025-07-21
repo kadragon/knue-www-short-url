@@ -2,7 +2,7 @@
   "name": "knue-www-short-url",
   "version": "1.0.0",
   "description": "한국교원대학교 게시판용 단축 URL 생성기",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
