@@ -23,6 +23,14 @@ jobs:
       with:
         node-version: '20' # 프로젝트에 맞는 Node.js 버전 지정
 
+    - name: Cache Node.js modules
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm # npm 캐시 경로
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
     - name: Install dependencies
       run: npm ci
 
