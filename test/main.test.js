@@ -1,95 +1,123 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 
-// Mock index.js globally so that main.js imports the mocked versions
+// Mock dependencies
 vi.mock('../src/index.js', () => ({
   encodeURL: vi.fn(),
   decodeURL: vi.fn(),
 }));
+vi.mock('qrcode', () => ({
+  default: {
+    toCanvas: vi.fn(),
+  },
+}));
 
 // Import the mocked functions
 import { encodeURL, decodeURL } from '../src/index.js';
+import QRCode from 'qrcode';
 
-// Import main.js AFTER index.js is mocked
-import '../src/main.js'; // This will set window.onload using the mocked functions
+// Import main.js AFTER mocks are set up
+import '../src/main.js';
 
-describe('Main Application Logic', () => {
+describe('main.js Logic', () => {
   let originalLocation;
   let originalAlert;
 
   beforeEach(() => {
-    // Reset mocks for each test
-    vi.clearAllMocks(); // Clears all mocks, including encodeURL and decodeURL
+    // Reset mocks and DOM before each test
+    vi.clearAllMocks();
 
     // Mock window.location and alert
     originalLocation = window.location;
     originalAlert = window.alert;
-
     Object.defineProperty(window, 'location', {
       writable: true,
       value: {
         href: '',
         search: '',
-        assign: vi.fn(),
-        replace: vi.fn(),
+        origin: 'https://knue.url.kr',
+        pathname: '/',
       },
     });
     window.alert = vi.fn();
 
-    // Reset DOM
-    document.body.innerHTML = '<div id="result"></div>';
+    // Set up DOM structure similar to index.html
+    document.body.innerHTML = `
+      <div id="container">
+        <div id="result"></div>
+        <div id="copy-info"></div>
+        <canvas id="qrCanvas"></canvas>
+      </div>
+    `;
   });
 
-  // Restore original window.location and alert after all tests
-  // This is important to avoid affecting other tests or the test runner itself
   afterAll(() => {
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: originalLocation,
-    });
+    // Restore original window properties
+    Object.defineProperty(window, 'location', { value: originalLocation });
     window.alert = originalAlert;
   });
 
-  it('should redirect to the decoded URL on successful decode', () => {
-    window.location.search = '?validCode';
-    // Set the mock implementation for this specific test
-    decodeURL.mockReturnValue({ url: 'https://www.knue.ac.kr/www/selectBbsNttView.do?key=1&bbsNo=2&nttNo=3' });
+  describe('Decode Mode', () => {
+    it('should redirect to the decoded URL on successful decode', () => {
+      window.location.search = '?validCode';
+      decodeURL.mockReturnValue({ url: 'https://example.com/decoded' });
 
-    // Manually trigger window.onload
-    window.onload();
+      window.onload();
 
-    expect(window.location.href).toBe('https://www.knue.ac.kr/www/selectBbsNttView.do?key=1&bbsNo=2&nttNo=3');
-    expect(window.alert).not.toHaveBeenCalled();
+      expect(decodeURL).toHaveBeenCalledWith('validCode');
+      expect(window.location.href).toBe('https://example.com/decoded');
+    });
+
+    it('should show an alert and redirect to home on failed decode', () => {
+      window.location.search = '?invalidCode';
+      decodeURL.mockReturnValue({ error: 'Invalid code' });
+
+      window.onload();
+
+      expect(window.alert).toHaveBeenCalledWith('잘못된 주소입니다.');
+      expect(window.location.href).toBe('/');
+    });
   });
 
-  it('should show an alert and redirect to default URL on failed decode', () => {
-    window.location.search = '?invalidCode';
-    decodeURL.mockReturnValue({ error: '잘못된 코드입니다.' });
+  describe('Encode Mode', () => {
+    it('should display the shortened URL and QR code on successful encode', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      encodeURL.mockReturnValue({ code: 'shortCode' });
 
-    window.onload();
+      window.onload();
 
-    expect(window.alert).toHaveBeenCalledWith('잘못된 주소입니다.');
-    expect(window.location.href).toBe('https://www.knue.ac.kr/www/index.do');
+      const resultDiv = document.getElementById('result');
+      const link = resultDiv.querySelector('a');
+      const copyInfoDiv = document.getElementById('copy-info');
+      const qrCanvas = document.getElementById('qrCanvas');
+      const expectedUrl = 'https://knue.url.kr/?shortCode';
+
+      expect(encodeURL).toHaveBeenCalledWith({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
+      expect(link).not.toBeNull();
+      expect(link.href).toBe(expectedUrl);
+      expect(link.textContent).toBe('knue.url.kr/?shortCode'); // Protocol removed for display
+      expect(copyInfoDiv.textContent).toBe('(주소를 클릭하면 클립보드에 복사됩니다.)');
+      expect(QRCode.toCanvas).toHaveBeenCalledWith(qrCanvas, expectedUrl, expect.any(Object), expect.any(Function));
+    });
+
+    it('should display an error message on failed encode', () => {
+      window.location.search = '?site=invalid&key=1&bbsNo=2&nttNo=3';
+      encodeURL.mockReturnValue({ error: 'Invalid site' });
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv.innerText).toBe('오류: Invalid site');
+      expect(QRCode.toCanvas).not.toHaveBeenCalled();
+    });
   });
 
-  it('should display JSON for encoding mode', () => {
-    window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
-    encodeURL.mockReturnValue({ code: 'encodedCode' });
+  describe('Default Mode', () => {
+    it('should display the default message when no query string is present', () => {
+      window.location.search = '';
+      window.onload();
 
-    window.onload();
-
-    const resultDiv = document.getElementById('result');
-    expect(resultDiv.innerText).toContain('"code": "encodedCode"');
-    expect(window.location.href).toBe(''); // No redirection in encoding mode
-    expect(window.alert).not.toHaveBeenCalled();
-  });
-
-  it('should display JSON for no query string', () => {
-    window.location.search = '';
-    window.onload();
-
-    const resultDiv = document.getElementById('result');
-    expect(resultDiv.innerText).toContain('"message": "KNUE 단축 URL 생성기"');
-    expect(window.location.href).toBe(''); // No redirection
-    expect(window.alert).not.toHaveBeenCalled();
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv.innerText).toBe('KNUE 단축 URL 생성기');
+    });
   });
 });
