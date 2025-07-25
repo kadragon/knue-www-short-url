@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/kadragon/knue-www-short-url#readme",
   "dependencies": {
+    "qrcode": "^1.5.4",
     "sqids": "^0.3.0"
   },
   "devDependencies": {
