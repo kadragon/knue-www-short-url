@@ -44,14 +44,20 @@ window.onload = function () {
 
       link.addEventListener("click", (event) => {
         event.preventDefault();
-        navigator.clipboard.writeText(shortUrl).then(
-          () => {
-            alert("클립보드에 복사되었습니다.");
-          },
-          () => {
-            alert("클립보드 복사에 실패했습니다.");
-          }
-        );
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(shortUrl).then(
+            () => {
+              alert("클립보드에 복사되었습니다.");
+            },
+            () => {
+              alert("클립보드 복사에 실패했습니다.");
+            }
+          );
+        } else {
+          alert(
+            "자동 복사 기능이 지원되지 않는 환경입니다. 수동으로 복사해주세요."
+          );
+        }
       });
 
       QRCode.toCanvas(qrCanvas, shortUrl, { width: 300 }, (error) => {
