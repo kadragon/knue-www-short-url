@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { encodeURL, decodeURL } from "../src/index.js";
+import { encodeURL, decodeURL } from "../src/js/urlEncoder.js";
 
 describe("URL Encoding/Decoding", () => {
   const originalData = {
