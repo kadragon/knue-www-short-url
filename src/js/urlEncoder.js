@@ -4,7 +4,7 @@ import { siteMap, siteMapReverse } from "./knueSites.js";
 /**
  * Sqids 인스턴스 - 최적화된 설정으로 더 짧은 코드 생성
  * - 확장된 알파벳: 더 많은 문자로 더 짧은 인코딩
- * - minLength: 0으로 설정하여 패딩 제거
+ * - minLength: 3으로 설정하여 생성되는 코드의 최소 길이를 보장
  * - 최적화된 blocklist로 혼동을 피하면서 최대 효율성 유지
  */
 const sqids = new Sqids({

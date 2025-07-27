@@ -106,7 +106,7 @@ describe('main.js Logic', () => {
       window.onload();
 
       const resultDiv = document.getElementById('result');
-      expect(resultDiv.innerText).toBe('오류: 단축 URL 생성에 실패했습니다.');
+      expect(resultDiv.innerText).toBe('오류: Invalid site');
       expect(QRCode.toCanvas).not.toHaveBeenCalled();
     });
   });

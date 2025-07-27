@@ -43,14 +43,9 @@ window.onload = function () {
     
     const decodeResult = decodeURL(code);
 
-    if (decodeResult.url) {
-      // Security: Validate URL is from KNUE domain before redirect
-      if (decodeResult.url.startsWith(VALIDATION.KNUE_DOMAIN)) {
-        window.location.href = decodeResult.url;
-      } else {
-        alert("잘못된 주소입니다.");
-        window.location.href = "/";
-      }
+    // Security: Validate URL exists and is from KNUE domain before redirect
+    if (decodeResult.url && decodeResult.url.startsWith(VALIDATION.KNUE_DOMAIN)) {
+      window.location.href = decodeResult.url;
     } else {
       alert("잘못된 주소입니다.");
       window.location.href = "/";
@@ -76,8 +71,7 @@ window.onload = function () {
     }
 
     // Validate numeric ranges (prevent extremely large numbers)
-    if (key < VALIDATION.MIN_NUMERIC_VALUE || bbsNo < VALIDATION.MIN_NUMERIC_VALUE || nttNo < VALIDATION.MIN_NUMERIC_VALUE || 
-        key > VALIDATION.MAX_NUMERIC_VALUE || bbsNo > VALIDATION.MAX_NUMERIC_VALUE || nttNo > VALIDATION.MAX_NUMERIC_VALUE) {
+    if ([key, bbsNo, nttNo].some(n => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE)) {
       resultDiv.innerText = "오류: 파라미터 값이 유효 범위를 벗어났습니다.";
       return;
     }
@@ -118,7 +112,7 @@ window.onload = function () {
         }
       });
     } else {
-      resultDiv.innerText = "오류: 단축 URL 생성에 실패했습니다.";
+      resultDiv.innerText = `오류: ${result.error}`;
     }
     return; // Stop execution
   }
