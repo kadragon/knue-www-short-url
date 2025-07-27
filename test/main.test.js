@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 
 // Mock dependencies
-vi.mock('../src/index.js', () => ({
+vi.mock('../src/js/urlEncoder.js', () => ({
   encodeURL: vi.fn(),
   decodeURL: vi.fn(),
 }));
@@ -12,11 +12,11 @@ vi.mock('qrcode', () => ({
 }));
 
 // Import the mocked functions
-import { encodeURL, decodeURL } from '../src/index.js';
+import { encodeURL, decodeURL } from '../src/js/urlEncoder.js';
 import QRCode from 'qrcode';
 
-// Import main.js AFTER mocks are set up
-import '../src/main.js';
+// Import app.js AFTER mocks are set up
+import '../src/js/app.js';
 
 describe('main.js Logic', () => {
   let originalLocation;
@@ -59,12 +59,12 @@ describe('main.js Logic', () => {
   describe('Decode Mode', () => {
     it('should redirect to the decoded URL on successful decode', () => {
       window.location.search = '?validCode';
-      decodeURL.mockReturnValue({ url: 'https://example.com/decoded' });
+      decodeURL.mockReturnValue({ url: 'https://www.knue.ac.kr/decoded' });
 
       window.onload();
 
       expect(decodeURL).toHaveBeenCalledWith('validCode');
-      expect(window.location.href).toBe('https://example.com/decoded');
+      expect(window.location.href).toBe('https://www.knue.ac.kr/decoded');
     });
 
     it('should show an alert and redirect to home on failed decode', () => {
