@@ -7,6 +7,37 @@
 
 ---
 
+## 현재 스프린트: 코드 품질 개선
+
+**Sprint Plan**: `.tasks/plan-refactor-code-quality.md`
+
+### Task REFACTOR-001: 에러 메시지 상수화 ✅ READY
+- **Spec**: `.tasks/task-refactor-001-error-messages.md`
+- **Status**: 📋 READY
+- **Effort**: S (2-3시간)
+
+### Task REFACTOR-002: 검증 함수 통합 ✅ READY
+- **Spec**: `.tasks/task-refactor-002-validation-functions.md`
+- **Status**: 📋 READY
+- **Effort**: M (3-4시간)
+
+### Task REFACTOR-003: UI 핸들러 분리 ✅ READY
+- **Spec**: `.tasks/task-refactor-003-ui-handlers.md`
+- **Status**: 📋 READY
+- **Effort**: M (3-4시간)
+
+### Task REFACTOR-004: 타입 검증 강화 ✅ READY
+- **Spec**: `.tasks/task-refactor-004-type-validation.md`
+- **Status**: 📋 READY
+- **Effort**: S (2-3시간)
+
+### Task REFACTOR-005: 문서화 추가 ✅ READY
+- **Spec**: `.tasks/task-refactor-005-documentation.md`
+- **Status**: 📋 READY
+- **Effort**: S (1-2시간)
+
+---
+
 ## 대기 중인 작업 (우선순위 낮음)
 
 ### Enhancement: 에러 처리 개선

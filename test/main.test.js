@@ -109,6 +109,112 @@ describe('main.js Logic', () => {
       expect(resultDiv.innerText).toBe('오류: Invalid site');
       expect(QRCode.toCanvas).not.toHaveBeenCalled();
     });
+
+    it('should display an error when required parameters are missing', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2';
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv.innerText).toBe('오류: 필수 파라미터가 누락되었거나 잘못되었습니다.');
+      expect(QRCode.toCanvas).not.toHaveBeenCalled();
+    });
+
+    it('should display an error when parameters are out of valid range', () => {
+      window.location.search = '?site=www&key=9999999999&bbsNo=2&nttNo=3';
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv.innerText).toBe('오류: 파라미터 값이 유효 범위를 벗어났습니다.');
+      expect(QRCode.toCanvas).not.toHaveBeenCalled();
+    });
+
+    it('should copy to clipboard on successful clipboard write', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      encodeURL.mockReturnValue({ code: 'shortCode' });
+
+      const mockClipboard = {
+        writeText: vi.fn().mockResolvedValue(undefined)
+      };
+      Object.defineProperty(navigator, 'clipboard', {
+        value: mockClipboard,
+        writable: true
+      });
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      const link = resultDiv.querySelector('a');
+      const expectedUrl = 'https://knue.url.kr/?shortCode';
+
+      link.click();
+
+      expect(mockClipboard.writeText).toHaveBeenCalledWith(expectedUrl);
+    });
+
+    it('should handle clipboard write failure', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      encodeURL.mockReturnValue({ code: 'shortCode' });
+
+      const mockClipboard = {
+        writeText: vi.fn().mockRejectedValue(new Error('Clipboard failed'))
+      };
+      Object.defineProperty(navigator, 'clipboard', {
+        value: mockClipboard,
+        writable: true
+      });
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      const link = resultDiv.querySelector('a');
+
+      link.click();
+
+      expect(mockClipboard.writeText).toHaveBeenCalled();
+    });
+
+    it('should show alert when clipboard is not available', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      encodeURL.mockReturnValue({ code: 'shortCode' });
+
+      Object.defineProperty(navigator, 'clipboard', {
+        value: undefined,
+        writable: true
+      });
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      const link = resultDiv.querySelector('a');
+
+      link.click();
+
+      expect(window.alert).toHaveBeenCalledWith(
+        '자동 복사 기능이 지원되지 않는 환경입니다. 수동으로 복사해주세요.'
+      );
+    });
+
+    it('should handle QR code generation error', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      encodeURL.mockReturnValue({ code: 'shortCode' });
+
+      QRCode.toCanvas.mockImplementation((canvas, url, options, callback) => {
+        callback(new Error('QR code generation failed'));
+      });
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      window.onload();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '오류: QR 코드 생성 실패:',
+        expect.any(Error)
+      );
+
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('Default Mode', () => {

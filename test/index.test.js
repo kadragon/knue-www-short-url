@@ -52,4 +52,28 @@ describe("URL Encoding/Decoding", () => {
     expect(result.error).toBeDefined();
     expect(result.url).toBeUndefined();
   });
+
+  it("should return an error when encoding with non-numeric values", () => {
+    const invalidData = { ...originalData, key: "not-a-number" };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
+
+  it("should return an error when encoding with NaN bbsNo", () => {
+    const invalidData = { ...originalData, bbsNo: NaN };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
+
+  it("should return an error when encoding with NaN nttNo", () => {
+    const invalidData = { ...originalData, nttNo: NaN };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
 });

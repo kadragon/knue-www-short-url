@@ -107,7 +107,7 @@ window.onload = function () {
 
       QRCode.toCanvas(qrCanvas, shortUrl, { width: 300 }, (error) => {
         if (error) {
-          console.error("QR 코드 생성 실패:", error);
+          console.error("오류: QR 코드 생성 실패:", error);
           // Don't expose internal error details to user
         }
       });
