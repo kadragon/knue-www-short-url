@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC-validation
 
-import { VALIDATION, ERROR_MESSAGES } from "./constants.js";
+import { VALIDATION, ERROR_MESSAGES } from "./constants";
 
 /**
  * 값이 유효한 숫자인지 검증합니다.
@@ -8,8 +8,8 @@ import { VALIDATION, ERROR_MESSAGES } from "./constants.js";
  * typeof 체크, NaN 체크, Infinity 체크를 모두 수행합니다.
  * null, undefined, 문자열, NaN, Infinity, -Infinity 등을 모두 거부합니다.
  *
- * @param {*} value - 검증할 값 (모든 타입 가능)
- * @returns {boolean} 유효한 숫자면 true, 아니면 false
+ * @param value - 검증할 값 (모든 타입 가능)
+ * @returns 유효한 숫자면 true, 아니면 false
  *
  * @example
  * isValidNumber(123);        // true
@@ -22,7 +22,7 @@ import { VALIDATION, ERROR_MESSAGES } from "./constants.js";
  * isValidNumber(undefined);  // false
  * isValidNumber("123");      // false
  */
-export function isValidNumber(value) {
+export function isValidNumber(value: unknown): value is number {
   return typeof value === 'number' && !isNaN(value) && isFinite(value);
 }
 
@@ -31,8 +31,8 @@ export function isValidNumber(value) {
  *
  * 가변 개수의 인자를 받아서 모든 값이 isValidNumber() 조건을 만족하는지 확인합니다.
  *
- * @param {...*} values - 검증할 값들 (가변 인자, 모든 타입 가능)
- * @returns {boolean} 모든 값이 유효한 숫자면 true, 하나라도 아니면 false
+ * @param values - 검증할 값들 (가변 인자, 모든 타입 가능)
+ * @returns 모든 값이 유효한 숫자면 true, 하나라도 아니면 false
  *
  * @example
  * areAllValidNumbers(1, 2, 3);           // true
@@ -41,17 +41,20 @@ export function isValidNumber(value) {
  * areAllValidNumbers(1, Infinity, 3);    // false
  * areAllValidNumbers(1, "2", 3);         // false
  */
-export function areAllValidNumbers(...values) {
+export function areAllValidNumbers(...values: unknown[]): values is number[] {
   return values.every(isValidNumber);
+}
+
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
 }
 
 /**
  * Decode 모드에서 입력된 코드의 길이 및 존재 여부를 검증합니다.
  *
- * @param {string} code - Decode할 코드 (URL 파라미터에서 추출)
- * @returns {Object} 검증 결과 객체
- * @returns {boolean} result.valid - 검증 통과 여부
- * @returns {string} result.error - 검증 실패 시 에러 메시지 (valid=false일 때만 존재)
+ * @param code - Decode할 코드 (URL 파라미터에서 추출)
+ * @returns 검증 결과 객체
  *
  * @example
  * validateDecodeCode('abc123');      // { valid: true }
@@ -59,8 +62,8 @@ export function areAllValidNumbers(...values) {
  * validateDecodeCode(null);          // { valid: false, error: '잘못된 주소입니다.' }
  * validateDecodeCode('a'.repeat(51)); // { valid: false, error: '오류: 코드 길이가 너무 깁니다.' }
  */
-export function validateDecodeCode(code) {
-  if (!code) {
+export function validateDecodeCode(code: unknown): ValidationResult {
+  if (!code || typeof code !== 'string') {
     return { valid: false, error: ERROR_MESSAGES.INVALID_CODE };
   }
 
@@ -71,19 +74,20 @@ export function validateDecodeCode(code) {
   return { valid: true };
 }
 
+interface EncodeParams {
+  site?: string;
+  key?: unknown;
+  bbsNo?: unknown;
+  nttNo?: unknown;
+}
+
 /**
  * Encode 모드에서 필수 파라미터의 존재 여부를 검증합니다.
  *
  * site는 문자열이어야 하고, key, bbsNo, nttNo는 유효한 숫자여야 합니다.
  *
- * @param {Object} params - 검증할 파라미터 객체
- * @param {string} params.site - 사이트명 (필수, 비어있으면 안됨)
- * @param {number} params.key - key 파라미터 (필수, 유효한 숫자여야 함)
- * @param {number} params.bbsNo - 게시판 번호 (필수, 유효한 숫자여야 함)
- * @param {number} params.nttNo - 게시글 번호 (필수, 유효한 숫자여야 함)
- * @returns {Object} 검증 결과 객체
- * @returns {boolean} result.valid - 검증 통과 여부
- * @returns {string} result.error - 검증 실패 시 에러 메시지
+ * @param params - 검증할 파라미터 객체
+ * @returns 검증 결과 객체
  *
  * @example
  * validateEncodeParams({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
@@ -93,7 +97,7 @@ export function validateDecodeCode(code) {
  * validateEncodeParams({ site: '', key: 1, bbsNo: 2, nttNo: 3 });
  * // { valid: false, error: '오류: 필수 파라미터가 누락되었거나 잘못되었습니다.' }
  */
-export function validateEncodeParams(params) {
+export function validateEncodeParams(params: EncodeParams): ValidationResult {
   const { site, key, bbsNo, nttNo } = params;
 
   if (!site || !areAllValidNumbers(key, bbsNo, nttNo)) {
@@ -108,13 +112,8 @@ export function validateEncodeParams(params) {
  *
  * 모든 파라미터는 0 이상 999,999,999 이하여야 합니다.
  *
- * @param {Object} params - 검증할 파라미터 객체
- * @param {number} params.key - key 파라미터
- * @param {number} params.bbsNo - 게시판 번호
- * @param {number} params.nttNo - 게시글 번호
- * @returns {Object} 검증 결과 객체
- * @returns {boolean} result.valid - 검증 통과 여부
- * @returns {string} result.error - 검증 실패 시 에러 메시지
+ * @param params - 검증할 파라미터 객체 (숫자만)
+ * @returns 검증 결과 객체
  *
  * @example
  * validateParameterRange({ key: 123, bbsNo: 456, nttNo: 789 });
@@ -124,7 +123,11 @@ export function validateEncodeParams(params) {
  * validateParameterRange({ key: 9999999999, bbsNo: 2, nttNo: 3 });
  * // { valid: false, error: '오류: 파라미터 값이 유효 범위를 벗어났습니다.' }
  */
-export function validateParameterRange(params) {
+export function validateParameterRange(params: {
+  key: number;
+  bbsNo: number;
+  nttNo: number;
+}): ValidationResult {
   const { key, bbsNo, nttNo } = params;
   const values = [key, bbsNo, nttNo];
 

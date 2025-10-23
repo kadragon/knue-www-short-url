@@ -1,6 +1,7 @@
-// siteMap.js
+// Site mapping for KNUE bulletin board system
+// Maps site names to numeric identifiers for encoding/decoding
 
-export const siteMap = {
+export const siteMap: Record<string, number> = {
   www: 1,
   grad: 2,
   edupol: 3,
@@ -35,6 +36,7 @@ export const siteMap = {
   idea: 32,
 };
 
-export const siteMapReverse = Object.fromEntries(
+// Reverse map: numeric IDs back to site names
+export const siteMapReverse: Record<number, string> = Object.fromEntries(
   Object.entries(siteMap).map(([k, v]) => [v, k])
 );
