@@ -1,7 +1,7 @@
 import { encodeURL, decodeURL } from "./urlEncoder.js";
 import { ERROR_MESSAGES, VALIDATION } from "./constants.js";
 import { validateDecodeCode, validateEncodeParams, validateParameterRange } from "./validators.js";
-import QRCode from "qrcode";
+import { createCopyClickHandler, handleGenerateQRCode } from "./uiHandlers.js";
 
 // Global error handling and monitoring
 window.addEventListener('error', (event) => {
@@ -84,28 +84,11 @@ window.onload = function () {
 
       copyInfoDiv.textContent = "(주소를 클릭하면 클립보드에 복사됩니다.)";
 
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(shortUrl).then(
-            () => {
-              alert(ERROR_MESSAGES.CLIPBOARD_COPIED);
-            },
-            () => {
-              alert(ERROR_MESSAGES.CLIPBOARD_COPY_FAILED);
-            }
-          );
-        } else {
-          alert(ERROR_MESSAGES.CLIPBOARD_NOT_SUPPORTED);
-        }
-      });
+      // Handle clipboard copy on link click
+      link.addEventListener("click", createCopyClickHandler(shortUrl));
 
-      QRCode.toCanvas(qrCanvas, shortUrl, { width: 300 }, (error) => {
-        if (error) {
-          console.error(ERROR_MESSAGES.QR_CODE_ERROR, error);
-          // Don't expose internal error details to user
-        }
-      });
+      // Generate QR code
+      handleGenerateQRCode(qrCanvas, shortUrl);
     } else {
       resultDiv.innerText = `오류: ${result.error}`;
     }
