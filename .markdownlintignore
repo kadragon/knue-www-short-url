@@ -1,0 +1,11 @@
+# Exclude spec, agents, and tasks documentation folders
+# These folders contain internal development documentation
+# and follow different formatting conventions
+
+.spec/
+.agents/
+.tasks/
+
+# Also ignore node_modules if scanned
+node_modules/
+dist/
