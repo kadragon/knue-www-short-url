@@ -73,8 +73,7 @@ export function handleGenerateQRCode(canvas, url) {
  * 반환된 핸들러는 기본 동작을 방지하고 handleCopyToClipboard()를 호출합니다.
  *
  * @param {string} url - 클릭 시 복사할 URL (단축 URL)
- * @returns {Function} 클릭 이벤트용 비동기 핸들러 함수
- * @returns {void} 핸들러는 async 함수이며 이벤트 처리 후 완료
+ * @returns {Function} 클릭 이벤트용 비동기 핸들러 함수. 이 핸들러는 이벤트 처리 후 void를 반환합니다.
  *
  * @example
  * const link = document.querySelector('a');

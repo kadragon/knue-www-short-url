@@ -20,7 +20,7 @@ describe('Validators Module', () => {
       const longCode = 'a'.repeat(51);
       const result = validateDecodeCode(longCode);
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('잘못된 주소입니다.');
+      expect(result.error).toBe('오류: 코드 길이가 너무 깁니다.');
     });
 
     it('should accept valid code', () => {

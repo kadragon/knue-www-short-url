@@ -15,6 +15,7 @@
  * @property {string} UNKNOWN_SITE_CODE - 사이트 코드 미등록
  * @property {string} MISSING_PARAMETERS - 필수 파라미터 누락
  * @property {string} INVALID_PARAMETER_RANGE - 파라미터 범위 초과
+ * @property {string} INVALID_CODE_LENGTH - 코드 길이 초과
  * @property {Function} UNSUPPORTED_SITE - 지원되지 않는 사이트 (동적 메시지)
  * @property {string} INVALID_NUMERIC_PARAMS - 숫자 파라미터 오류
  * @property {string} CLIPBOARD_COPIED - 클립보드 복사 성공
@@ -31,6 +32,7 @@ export const ERROR_MESSAGES = {
   // Encode errors
   MISSING_PARAMETERS: "오류: 필수 파라미터가 누락되었거나 잘못되었습니다.",
   INVALID_PARAMETER_RANGE: "오류: 파라미터 값이 유효 범위를 벗어났습니다.",
+  INVALID_CODE_LENGTH: "오류: 코드 길이가 너무 깁니다.",
   UNSUPPORTED_SITE: (site) => `지원하지 않는 사이트입니다: ${site}`,
   INVALID_NUMERIC_PARAMS: "key, bbsNo, nttNo는 반드시 숫자여야 합니다.",
 

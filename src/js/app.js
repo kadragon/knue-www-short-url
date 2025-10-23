@@ -90,17 +90,17 @@ window.onload = function () {
 
     // 필수 파라미터 검증 (validators.js 사용)
     // site 존재 여부, key/bbsNo/nttNo가 유효한 숫자인지 확인
-    let validation = validateEncodeParams({ site, key, bbsNo, nttNo });
-    if (!validation.valid) {
-      resultDiv.innerText = validation.error;
+    const encodeParamsValidation = validateEncodeParams({ site, key, bbsNo, nttNo });
+    if (!encodeParamsValidation.valid) {
+      resultDiv.innerText = encodeParamsValidation.error;
       return;
     }
 
     // 범위 검증: 모든 숫자가 0 ~ 999,999,999 범위 내인지 확인
     // 너무 큰 숫자는 Sqids 인코딩 오류 및 보안 문제 야기 가능
-    validation = validateParameterRange({ key, bbsNo, nttNo });
-    if (!validation.valid) {
-      resultDiv.innerText = validation.error;
+    const rangeValidation = validateParameterRange({ key, bbsNo, nttNo });
+    if (!rangeValidation.valid) {
+      resultDiv.innerText = rangeValidation.error;
       return;
     }
 

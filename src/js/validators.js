@@ -3,100 +3,6 @@
 import { VALIDATION, ERROR_MESSAGES } from "./constants.js";
 
 /**
- * Decode 모드에서 입력된 코드의 길이 및 존재 여부를 검증합니다.
- *
- * @param {string} code - Decode할 코드 (URL 파라미터에서 추출)
- * @returns {Object} 검증 결과 객체
- * @returns {boolean} result.valid - 검증 통과 여부
- * @returns {string} result.error - 검증 실패 시 에러 메시지 (valid=false일 때만 존재)
- *
- * @example
- * validateDecodeCode('abc123');      // { valid: true }
- * validateDecodeCode('');            // { valid: false, error: '잘못된 주소입니다.' }
- * validateDecodeCode(null);          // { valid: false, error: '잘못된 주소입니다.' }
- * validateDecodeCode('a'.repeat(51)); // { valid: false, error: '잘못된 주소입니다.' }
- */
-export function validateDecodeCode(code) {
-  if (!code) {
-    return { valid: false, error: ERROR_MESSAGES.INVALID_CODE };
-  }
-
-  if (code.length > VALIDATION.MAX_CODE_LENGTH) {
-    return { valid: false, error: ERROR_MESSAGES.INVALID_CODE };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Encode 모드에서 필수 파라미터의 존재 여부를 검증합니다.
- *
- * site는 문자열이어야 하고, key, bbsNo, nttNo는 유효한 숫자여야 합니다.
- *
- * @param {Object} params - 검증할 파라미터 객체
- * @param {string} params.site - 사이트명 (필수, 비어있으면 안됨)
- * @param {number} params.key - key 파라미터 (필수, 유효한 숫자여야 함)
- * @param {number} params.bbsNo - 게시판 번호 (필수, 유효한 숫자여야 함)
- * @param {number} params.nttNo - 게시글 번호 (필수, 유효한 숫자여야 함)
- * @returns {Object} 검증 결과 객체
- * @returns {boolean} result.valid - 검증 통과 여부
- * @returns {string} result.error - 검증 실패 시 에러 메시지
- *
- * @example
- * validateEncodeParams({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
- * // { valid: true }
- *
- * @example
- * validateEncodeParams({ site: '', key: 1, bbsNo: 2, nttNo: 3 });
- * // { valid: false, error: '오류: 필수 파라미터가 누락되었거나 잘못되었습니다.' }
- */
-export function validateEncodeParams(params) {
-  const { site, key, bbsNo, nttNo } = params;
-
-  if (!site || isNaN(key) || isNaN(bbsNo) || isNaN(nttNo)) {
-    return { valid: false, error: ERROR_MESSAGES.MISSING_PARAMETERS };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Encode 모드에서 숫자 파라미터의 유효한 범위를 검증합니다.
- *
- * 모든 파라미터는 0 이상 999,999,999 이하여야 합니다.
- *
- * @param {Object} params - 검증할 파라미터 객체
- * @param {number} params.key - key 파라미터
- * @param {number} params.bbsNo - 게시판 번호
- * @param {number} params.nttNo - 게시글 번호
- * @returns {Object} 검증 결과 객체
- * @returns {boolean} result.valid - 검증 통과 여부
- * @returns {string} result.error - 검증 실패 시 에러 메시지
- *
- * @example
- * validateParameterRange({ key: 123, bbsNo: 456, nttNo: 789 });
- * // { valid: true }
- *
- * @example
- * validateParameterRange({ key: 9999999999, bbsNo: 2, nttNo: 3 });
- * // { valid: false, error: '오류: 파라미터 값이 유효 범위를 벗어났습니다.' }
- */
-export function validateParameterRange(params) {
-  const { key, bbsNo, nttNo } = params;
-  const values = [key, bbsNo, nttNo];
-
-  const isOutOfRange = values.some(
-    n => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE
-  );
-
-  if (isOutOfRange) {
-    return { valid: false, error: ERROR_MESSAGES.INVALID_PARAMETER_RANGE };
-  }
-
-  return { valid: true };
-}
-
-/**
  * 값이 유효한 숫자인지 검증합니다.
  *
  * typeof 체크, NaN 체크, Infinity 체크를 모두 수행합니다.
@@ -137,4 +43,98 @@ export function isValidNumber(value) {
  */
 export function areAllValidNumbers(...values) {
   return values.every(isValidNumber);
+}
+
+/**
+ * Decode 모드에서 입력된 코드의 길이 및 존재 여부를 검증합니다.
+ *
+ * @param {string} code - Decode할 코드 (URL 파라미터에서 추출)
+ * @returns {Object} 검증 결과 객체
+ * @returns {boolean} result.valid - 검증 통과 여부
+ * @returns {string} result.error - 검증 실패 시 에러 메시지 (valid=false일 때만 존재)
+ *
+ * @example
+ * validateDecodeCode('abc123');      // { valid: true }
+ * validateDecodeCode('');            // { valid: false, error: '잘못된 주소입니다.' }
+ * validateDecodeCode(null);          // { valid: false, error: '잘못된 주소입니다.' }
+ * validateDecodeCode('a'.repeat(51)); // { valid: false, error: '오류: 코드 길이가 너무 깁니다.' }
+ */
+export function validateDecodeCode(code) {
+  if (!code) {
+    return { valid: false, error: ERROR_MESSAGES.INVALID_CODE };
+  }
+
+  if (code.length > VALIDATION.MAX_CODE_LENGTH) {
+    return { valid: false, error: ERROR_MESSAGES.INVALID_CODE_LENGTH };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Encode 모드에서 필수 파라미터의 존재 여부를 검증합니다.
+ *
+ * site는 문자열이어야 하고, key, bbsNo, nttNo는 유효한 숫자여야 합니다.
+ *
+ * @param {Object} params - 검증할 파라미터 객체
+ * @param {string} params.site - 사이트명 (필수, 비어있으면 안됨)
+ * @param {number} params.key - key 파라미터 (필수, 유효한 숫자여야 함)
+ * @param {number} params.bbsNo - 게시판 번호 (필수, 유효한 숫자여야 함)
+ * @param {number} params.nttNo - 게시글 번호 (필수, 유효한 숫자여야 함)
+ * @returns {Object} 검증 결과 객체
+ * @returns {boolean} result.valid - 검증 통과 여부
+ * @returns {string} result.error - 검증 실패 시 에러 메시지
+ *
+ * @example
+ * validateEncodeParams({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
+ * // { valid: true }
+ *
+ * @example
+ * validateEncodeParams({ site: '', key: 1, bbsNo: 2, nttNo: 3 });
+ * // { valid: false, error: '오류: 필수 파라미터가 누락되었거나 잘못되었습니다.' }
+ */
+export function validateEncodeParams(params) {
+  const { site, key, bbsNo, nttNo } = params;
+
+  if (!site || !areAllValidNumbers(key, bbsNo, nttNo)) {
+    return { valid: false, error: ERROR_MESSAGES.MISSING_PARAMETERS };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Encode 모드에서 숫자 파라미터의 유효한 범위를 검증합니다.
+ *
+ * 모든 파라미터는 0 이상 999,999,999 이하여야 합니다.
+ *
+ * @param {Object} params - 검증할 파라미터 객체
+ * @param {number} params.key - key 파라미터
+ * @param {number} params.bbsNo - 게시판 번호
+ * @param {number} params.nttNo - 게시글 번호
+ * @returns {Object} 검증 결과 객체
+ * @returns {boolean} result.valid - 검증 통과 여부
+ * @returns {string} result.error - 검증 실패 시 에러 메시지
+ *
+ * @example
+ * validateParameterRange({ key: 123, bbsNo: 456, nttNo: 789 });
+ * // { valid: true }
+ *
+ * @example
+ * validateParameterRange({ key: 9999999999, bbsNo: 2, nttNo: 3 });
+ * // { valid: false, error: '오류: 파라미터 값이 유효 범위를 벗어났습니다.' }
+ */
+export function validateParameterRange(params) {
+  const { key, bbsNo, nttNo } = params;
+  const values = [key, bbsNo, nttNo];
+
+  const isOutOfRange = values.some(
+    n => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE
+  );
+
+  if (isOutOfRange) {
+    return { valid: false, error: ERROR_MESSAGES.INVALID_PARAMETER_RANGE };
+  }
+
+  return { valid: true };
 }
