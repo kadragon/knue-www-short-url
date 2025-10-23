@@ -1,4 +1,5 @@
 import { encodeURL, decodeURL } from "./urlEncoder.js";
+import { ERROR_MESSAGES, VALIDATION } from "./constants.js";
 import QRCode from "qrcode";
 
 // Global error handling and monitoring
@@ -16,14 +17,6 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
 });
 
-// Input validation constants
-const VALIDATION = {
-  MAX_CODE_LENGTH: 50,
-  MAX_NUMERIC_VALUE: 999999999,
-  MIN_NUMERIC_VALUE: 0,
-  KNUE_DOMAIN: 'https://www.knue.ac.kr/'
-};
-
 window.onload = function () {
   const search = window.location.search;
   const resultDiv = document.getElementById("result");
@@ -36,7 +29,7 @@ window.onload = function () {
     
     // Basic input validation
     if (!code || code.length > VALIDATION.MAX_CODE_LENGTH) {
-      alert("잘못된 주소입니다.");
+      alert(ERROR_MESSAGES.INVALID_CODE);
       window.location.href = "/";
       return;
     }
@@ -47,7 +40,7 @@ window.onload = function () {
     if (decodeResult.url && decodeResult.url.startsWith(VALIDATION.KNUE_DOMAIN)) {
       window.location.href = decodeResult.url;
     } else {
-      alert("잘못된 주소입니다.");
+      alert(ERROR_MESSAGES.INVALID_CODE);
       window.location.href = "/";
     }
     return;
@@ -66,13 +59,13 @@ window.onload = function () {
 
     // Validate required parameters
     if (!site || isNaN(key) || isNaN(bbsNo) || isNaN(nttNo)) {
-      resultDiv.innerText = "오류: 필수 파라미터가 누락되었거나 잘못되었습니다.";
+      resultDiv.innerText = ERROR_MESSAGES.MISSING_PARAMETERS;
       return;
     }
 
     // Validate numeric ranges (prevent extremely large numbers)
     if ([key, bbsNo, nttNo].some(n => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE)) {
-      resultDiv.innerText = "오류: 파라미터 값이 유효 범위를 벗어났습니다.";
+      resultDiv.innerText = ERROR_MESSAGES.INVALID_PARAMETER_RANGE;
       return;
     }
 
@@ -92,22 +85,20 @@ window.onload = function () {
         if (navigator.clipboard) {
           navigator.clipboard.writeText(shortUrl).then(
             () => {
-              alert("클립보드에 복사되었습니다.");
+              alert(ERROR_MESSAGES.CLIPBOARD_COPIED);
             },
             () => {
-              alert("클립보드 복사에 실패했습니다.");
+              alert(ERROR_MESSAGES.CLIPBOARD_COPY_FAILED);
             }
           );
         } else {
-          alert(
-            "자동 복사 기능이 지원되지 않는 환경입니다. 수동으로 복사해주세요."
-          );
+          alert(ERROR_MESSAGES.CLIPBOARD_NOT_SUPPORTED);
         }
       });
 
       QRCode.toCanvas(qrCanvas, shortUrl, { width: 300 }, (error) => {
         if (error) {
-          console.error("오류: QR 코드 생성 실패:", error);
+          console.error(ERROR_MESSAGES.QR_CODE_ERROR, error);
           // Don't expose internal error details to user
         }
       });
