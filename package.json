@@ -2,7 +2,7 @@
   "name": "knue-www-short-url",
   "version": "1.0.0",
   "description": "한국교원대학교 게시판용 단축 URL 생성기",
-  "main": "src/js/urlEncoder.js",
+  "main": "src/urlEncoder.ts",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -25,7 +25,12 @@
     "sqids": "^0.3.0"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
     "jsdom": "^26.1.0",
+    "typescript": "^5.9.3",
     "vite": "^7.1.11",
     "vitest": "^3.2.4"
   }

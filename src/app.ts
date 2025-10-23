@@ -1,10 +1,10 @@
-import { encodeURL, decodeURL } from "./urlEncoder.js";
-import { ERROR_MESSAGES, VALIDATION } from "./constants.js";
-import { validateDecodeCode, validateEncodeParams, validateParameterRange } from "./validators.js";
-import { createCopyClickHandler, handleGenerateQRCode } from "./uiHandlers.js";
+import { encodeURL, decodeURL } from "./urlEncoder";
+import { ERROR_MESSAGES, VALIDATION } from "./constants";
+import { validateDecodeCode, validateEncodeParams, validateParameterRange } from "./validators";
+import { createCopyClickHandler, handleGenerateQRCode } from "./uiHandlers";
 
 // Global error handling and monitoring
-window.addEventListener('error', (event) => {
+window.addEventListener('error', (event: ErrorEvent) => {
   console.error('Global error:', {
     message: event.error?.message,
     filename: event.filename,
@@ -14,7 +14,7 @@ window.addEventListener('error', (event) => {
   });
 });
 
-window.addEventListener('unhandledrejection', (event) => {
+window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
   console.error('Unhandled promise rejection:', event.reason);
 });
 
@@ -27,18 +27,14 @@ window.addEventListener('unhandledrejection', (event) => {
  * 3. Default Mode: / → 기본 메시지 표시
  *
  * URL 파라미터를 파싱하여 적절한 모드로 라우팅합니다.
- * 모든 입력값은 validators.js의 함수로 검증합니다.
- *
- * @event window.onload
- * @fires window.location.href (Decode 모드에서 리다이렉트)
- * @returns {void}
+ * 모든 입력값은 validators.ts의 함수로 검증합니다.
  */
 window.onload = function () {
   // DOM 요소 참조 (페이지 로드 시 요소가 존재해야 함)
   const search = window.location.search;
-  const resultDiv = document.getElementById("result");
-  const qrCanvas = document.getElementById("qrCanvas");
-  const copyInfoDiv = document.getElementById("copy-info");
+  const resultDiv = document.getElementById("result") as HTMLDivElement;
+  const qrCanvas = document.getElementById("qrCanvas") as HTMLCanvasElement;
+  const copyInfoDiv = document.getElementById("copy-info") as HTMLDivElement;
 
   /**
    * MODE 1: Decode Mode
@@ -49,7 +45,7 @@ window.onload = function () {
     // URL에서 '?' 제거하고 공백 정리
     const code = search.substring(1).trim();
 
-    // 코드 길이 및 형식 검증 (validators.js 사용)
+    // 코드 길이 및 형식 검증 (validators.ts 사용)
     const validation = validateDecodeCode(code);
     if (!validation.valid) {
       alert(validation.error);
@@ -57,7 +53,7 @@ window.onload = function () {
       return;
     }
 
-    // 코드를 원본 URL로 디코딩 (urlEncoder.js 사용)
+    // 코드를 원본 URL로 디코딩 (urlEncoder.ts 사용)
     const decodeResult = decodeURL(code);
 
     // 보안: 디코딩된 URL이 KNUE 도메인인지 검증 후 리다이렉트
@@ -88,11 +84,11 @@ window.onload = function () {
     const bbsNo = parseInt(params.bbsNo, 10);
     const nttNo = parseInt(params.nttNo, 10);
 
-    // 필수 파라미터 검증 (validators.js 사용)
+    // 필수 파라미터 검증 (validators.ts 사용)
     // site 존재 여부, key/bbsNo/nttNo가 유효한 숫자인지 확인
     const encodeParamsValidation = validateEncodeParams({ site, key, bbsNo, nttNo });
     if (!encodeParamsValidation.valid) {
-      resultDiv.innerText = encodeParamsValidation.error;
+      resultDiv.innerText = encodeParamsValidation.error ?? '';
       return;
     }
 
@@ -100,11 +96,11 @@ window.onload = function () {
     // 너무 큰 숫자는 Sqids 인코딩 오류 및 보안 문제 야기 가능
     const rangeValidation = validateParameterRange({ key, bbsNo, nttNo });
     if (!rangeValidation.valid) {
-      resultDiv.innerText = rangeValidation.error;
+      resultDiv.innerText = rangeValidation.error ?? '';
       return;
     }
 
-    // 파라미터를 Sqids로 인코딩하여 단축 코드 생성 (urlEncoder.js 사용)
+    // 파라미터를 Sqids로 인코딩하여 단축 코드 생성 (urlEncoder.ts 사용)
     const result = encodeURL({ site, key, bbsNo, nttNo });
 
     // 인코딩 성공 시: 단축 URL 생성 및 QR 코드 렌더링
@@ -126,7 +122,7 @@ window.onload = function () {
       // 링크 클릭 시 클립보드에 복사하는 이벤트 핸들러 등록
       link.addEventListener("click", createCopyClickHandler(shortUrl));
 
-      // QR 코드 생성 (Canvas에 렌더링, uiHandlers.js 사용)
+      // QR 코드 생성 (Canvas에 렌더링, uiHandlers.ts 사용)
       handleGenerateQRCode(qrCanvas, shortUrl);
     } else {
       // 인코딩 실패 시: 에러 메시지 표시 (지원되지 않는 사이트 등)
