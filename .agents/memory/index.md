@@ -99,7 +99,6 @@
 
 - **프로젝트 헌법**: `.agents/constitution.md`
 - **코딩 패턴**: `.agents/patterns.md`
-- **개발 가이드**: `CLAUDE.md`
 - **기능 스펙**: `.spec/features/`
 - **테스트**: `test/`
 - **빌드 설정**: `vite.config.js`
