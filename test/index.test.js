@@ -76,4 +76,44 @@ describe("URL Encoding/Decoding", () => {
     expect(result.error).toContain("반드시 숫자여야");
     expect(result.code).toBeUndefined();
   });
+
+  it("should return an error when encoding with null key", () => {
+    const invalidData = { ...originalData, key: null };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
+
+  it("should return an error when encoding with undefined bbsNo", () => {
+    const invalidData = { ...originalData, bbsNo: undefined };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
+
+  it("should return an error when encoding with Infinity", () => {
+    const invalidData = { ...originalData, nttNo: Infinity };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
+
+  it("should return an error when encoding with negative Infinity", () => {
+    const invalidData = { ...originalData, key: -Infinity };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
+
+  it("should return an error when encoding with string number", () => {
+    const invalidData = { ...originalData, key: "123" };
+    const result = encodeURL(invalidData);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("반드시 숫자여야");
+    expect(result.code).toBeUndefined();
+  });
 });

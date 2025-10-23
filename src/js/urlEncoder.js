@@ -1,6 +1,7 @@
 import Sqids from "sqids";
 import { siteMap, siteMapReverse } from "./knueSites.js";
 import { ERROR_MESSAGES } from "./constants.js";
+import { areAllValidNumbers } from "./validators.js";
 
 /**
  * Sqids 인스턴스 - 최적화된 설정으로 더 짧은 코드 생성
@@ -40,7 +41,7 @@ export function encodeURL({ site, key, bbsNo, nttNo }) {
   if (!siteNum) {
     return { error: ERROR_MESSAGES.UNSUPPORTED_SITE(site) };
   }
-  if ([key, bbsNo, nttNo].some(isNaN)) {
+  if (!areAllValidNumbers(key, bbsNo, nttNo)) {
     return { error: ERROR_MESSAGES.INVALID_NUMERIC_PARAMS };
   }
   return { code: sqids.encode([siteNum, key, bbsNo, nttNo]) };

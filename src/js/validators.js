@@ -56,9 +56,19 @@ export function validateParameterRange(params) {
 
 /**
  * 숫자 파라미터 타입 검증
+ * Validates that a value is a finite number (not NaN, null, undefined, or Infinity)
  * @param {number} value - 검증할 값
  * @returns {boolean} 유효한 숫자면 true
  */
 export function isValidNumber(value) {
   return typeof value === 'number' && !isNaN(value) && isFinite(value);
+}
+
+/**
+ * 숫자 배열의 모든 요소가 유효한 숫자인지 검증
+ * @param {...number} values - 검증할 값들 (가변 인자)
+ * @returns {boolean} 모두 유효하면 true
+ */
+export function areAllValidNumbers(...values) {
+  return values.every(isValidNumber);
 }
