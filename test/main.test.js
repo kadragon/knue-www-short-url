@@ -1,4 +1,137 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
+import { validateDecodeCode, validateEncodeParams, validateParameterRange, isValidNumber } from '../src/js/validators.js';
+
+// Validator Unit Tests
+describe('Validators Module', () => {
+  describe('validateDecodeCode', () => {
+    it('should reject empty code', () => {
+      const result = validateDecodeCode('');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('잘못된 주소입니다.');
+    });
+
+    it('should reject null code', () => {
+      const result = validateDecodeCode(null);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('잘못된 주소입니다.');
+    });
+
+    it('should reject code exceeding max length', () => {
+      const longCode = 'a'.repeat(51);
+      const result = validateDecodeCode(longCode);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('잘못된 주소입니다.');
+    });
+
+    it('should accept valid code', () => {
+      const result = validateDecodeCode('validCode123');
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should accept code at max length', () => {
+      const maxCode = 'a'.repeat(50);
+      const result = validateDecodeCode(maxCode);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe('validateEncodeParams', () => {
+    it('should reject missing site', () => {
+      const result = validateEncodeParams({ site: '', key: 1, bbsNo: 2, nttNo: 3 });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('필수 파라미터');
+    });
+
+    it('should reject NaN key', () => {
+      const result = validateEncodeParams({ site: 'www', key: NaN, bbsNo: 2, nttNo: 3 });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('필수 파라미터');
+    });
+
+    it('should reject NaN bbsNo', () => {
+      const result = validateEncodeParams({ site: 'www', key: 1, bbsNo: NaN, nttNo: 3 });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('필수 파라미터');
+    });
+
+    it('should reject NaN nttNo', () => {
+      const result = validateEncodeParams({ site: 'www', key: 1, bbsNo: 2, nttNo: NaN });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('필수 파라미터');
+    });
+
+    it('should accept valid params', () => {
+      const result = validateEncodeParams({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe('validateParameterRange', () => {
+    it('should reject key out of range (too high)', () => {
+      const result = validateParameterRange({ key: 9999999999, bbsNo: 2, nttNo: 3 });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('유효 범위');
+    });
+
+    it('should reject bbsNo out of range (negative)', () => {
+      const result = validateParameterRange({ key: 1, bbsNo: -1, nttNo: 3 });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('유효 범위');
+    });
+
+    it('should reject nttNo out of range (too high)', () => {
+      const result = validateParameterRange({ key: 1, bbsNo: 2, nttNo: 1000000000 });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('유효 범위');
+    });
+
+    it('should accept valid parameters within range', () => {
+      const result = validateParameterRange({ key: 123, bbsNo: 456, nttNo: 789 });
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should accept parameters at min boundary', () => {
+      const result = validateParameterRange({ key: 0, bbsNo: 0, nttNo: 0 });
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should accept parameters at max boundary', () => {
+      const result = validateParameterRange({ key: 999999999, bbsNo: 999999999, nttNo: 999999999 });
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe('isValidNumber', () => {
+    it('should return true for valid numbers', () => {
+      expect(isValidNumber(123)).toBe(true);
+      expect(isValidNumber(0)).toBe(true);
+      expect(isValidNumber(-1)).toBe(true);
+      expect(isValidNumber(3.14)).toBe(true);
+    });
+
+    it('should return false for NaN', () => {
+      expect(isValidNumber(NaN)).toBe(false);
+    });
+
+    it('should return false for Infinity', () => {
+      expect(isValidNumber(Infinity)).toBe(false);
+      expect(isValidNumber(-Infinity)).toBe(false);
+    });
+
+    it('should return false for non-numbers', () => {
+      expect(isValidNumber('123')).toBe(false);
+      expect(isValidNumber(null)).toBe(false);
+      expect(isValidNumber(undefined)).toBe(false);
+      expect(isValidNumber({})).toBe(false);
+    });
+  });
+});
 
 // Mock dependencies
 vi.mock('../src/js/urlEncoder.js', () => ({

@@ -1,5 +1,6 @@
 import { encodeURL, decodeURL } from "./urlEncoder.js";
 import { ERROR_MESSAGES, VALIDATION } from "./constants.js";
+import { validateDecodeCode, validateEncodeParams, validateParameterRange } from "./validators.js";
 import QRCode from "qrcode";
 
 // Global error handling and monitoring
@@ -26,14 +27,15 @@ window.onload = function () {
   // 1. Decode Mode (e.g., ?XyZ123)
   if (search && !search.includes("=")) {
     const code = search.substring(1).trim();
-    
-    // Basic input validation
-    if (!code || code.length > VALIDATION.MAX_CODE_LENGTH) {
-      alert(ERROR_MESSAGES.INVALID_CODE);
+
+    // Validate code format and length
+    const validation = validateDecodeCode(code);
+    if (!validation.valid) {
+      alert(validation.error);
       window.location.href = "/";
       return;
     }
-    
+
     const decodeResult = decodeURL(code);
 
     // Security: Validate URL exists and is from KNUE domain before redirect
@@ -58,14 +60,16 @@ window.onload = function () {
     const nttNo = parseInt(params.nttNo, 10);
 
     // Validate required parameters
-    if (!site || isNaN(key) || isNaN(bbsNo) || isNaN(nttNo)) {
-      resultDiv.innerText = ERROR_MESSAGES.MISSING_PARAMETERS;
+    let validation = validateEncodeParams({ site, key, bbsNo, nttNo });
+    if (!validation.valid) {
+      resultDiv.innerText = validation.error;
       return;
     }
 
-    // Validate numeric ranges (prevent extremely large numbers)
-    if ([key, bbsNo, nttNo].some(n => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE)) {
-      resultDiv.innerText = ERROR_MESSAGES.INVALID_PARAMETER_RANGE;
+    // Validate numeric ranges
+    validation = validateParameterRange({ key, bbsNo, nttNo });
+    if (!validation.valid) {
+      resultDiv.innerText = validation.error;
       return;
     }
 
