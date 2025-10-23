@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi, type MockedFunction } from 'vitest';
 import { validateDecodeCode, validateEncodeParams, validateParameterRange, isValidNumber } from '../src/validators';
+import type { encodeURL as encodeURLType, decodeURL as decodeURLType } from '../src/urlEncoder';
+import type { QRCodeRenderersOptions, QRCodeSegment } from 'qrcode';
 
 // Validator Unit Tests
 describe('Validators Module', () => {
@@ -148,6 +150,13 @@ vi.mock('qrcode', () => ({
 import { encodeURL, decodeURL } from '../src/urlEncoder';
 import QRCode from 'qrcode';
 
+// Type the mocked functions
+const mockedEncodeURL = encodeURL as MockedFunction<encodeURLType>;
+const mockedDecodeURL = decodeURL as MockedFunction<decodeURLType>;
+const mockedQRCodeToCanvas = QRCode.toCanvas as MockedFunction<
+  (canvas: HTMLCanvasElement | string, text: string | QRCodeSegment[], options?: QRCodeRenderersOptions, callback?: (error: Error | null | undefined) => void) => void
+>;
+
 // Import app.ts AFTER mocks are set up
 import '../src/app';
 
@@ -192,17 +201,17 @@ describe('main.ts Logic', () => {
   describe('Decode Mode', () => {
     it('should redirect to the decoded URL on successful decode', () => {
       window.location.search = '?validCode';
-      (decodeURL as any).mockReturnValue({ url: 'https://www.knue.ac.kr/decoded' });
+      mockedDecodeURL.mockReturnValue({ url: 'https://www.knue.ac.kr/decoded' });
 
       window.onload();
 
-      expect(decodeURL).toHaveBeenCalledWith('validCode');
+      expect(mockedDecodeURL).toHaveBeenCalledWith('validCode');
       expect(window.location.href).toBe('https://www.knue.ac.kr/decoded');
     });
 
     it('should show an alert and redirect to home on failed decode', () => {
       window.location.search = '?invalidCode';
-      (decodeURL as any).mockReturnValue({ error: 'Invalid code' });
+      mockedDecodeURL.mockReturnValue({ error: 'Invalid code' });
 
       window.onload();
 
@@ -214,7 +223,7 @@ describe('main.ts Logic', () => {
   describe('Encode Mode', () => {
     it('should display the shortened URL and QR code on successful encode', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
-      (encodeURL as any).mockReturnValue({ code: 'shortCode' });
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       window.onload();
 
@@ -224,7 +233,7 @@ describe('main.ts Logic', () => {
       const qrCanvas = document.getElementById('qrCanvas');
       const expectedUrl = 'https://knue.url.kr/?shortCode';
 
-      expect(encodeURL).toHaveBeenCalledWith({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
+      expect(mockedEncodeURL).toHaveBeenCalledWith({ site: 'www', key: 1, bbsNo: 2, nttNo: 3 });
       expect(link).not.toBeNull();
       expect(link?.href).toBe(expectedUrl);
       expect(link?.textContent).toBe('knue.url.kr/?shortCode'); // Protocol removed for display
@@ -234,7 +243,7 @@ describe('main.ts Logic', () => {
 
     it('should display an error message on failed encode', () => {
       window.location.search = '?site=invalid&key=1&bbsNo=2&nttNo=3';
-      (encodeURL as any).mockReturnValue({ error: 'Invalid site' });
+      mockedEncodeURL.mockReturnValue({ error: 'Invalid site' });
 
       window.onload();
 
@@ -265,7 +274,7 @@ describe('main.ts Logic', () => {
 
     it('should copy to clipboard on successful clipboard write', async () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
-      (encodeURL as any).mockReturnValue({ code: 'shortCode' });
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       const mockClipboard = {
         writeText: vi.fn().mockResolvedValue(undefined)
@@ -288,7 +297,7 @@ describe('main.ts Logic', () => {
 
     it('should handle clipboard write failure', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
-      (encodeURL as any).mockReturnValue({ code: 'shortCode' });
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       const mockClipboard = {
         writeText: vi.fn().mockRejectedValue(new Error('Clipboard failed'))
@@ -310,7 +319,7 @@ describe('main.ts Logic', () => {
 
     it('should show alert when clipboard is not available', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
-      (encodeURL as any).mockReturnValue({ code: 'shortCode' });
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       Object.defineProperty(navigator, 'clipboard', {
         value: undefined,
@@ -331,9 +340,9 @@ describe('main.ts Logic', () => {
 
     it('should handle QR code generation error', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
-      (encodeURL as any).mockReturnValue({ code: 'shortCode' });
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
-      (QRCode.toCanvas as any).mockImplementation((canvas: HTMLCanvasElement, url: string, options: any, callback: Function) => {
+      mockedQRCodeToCanvas.mockImplementation((canvas: HTMLCanvasElement, url: string, options: object, callback: (error: Error | null) => void) => {
         callback(new Error('QR code generation failed'));
       });
 
