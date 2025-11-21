@@ -73,6 +73,11 @@
 
 ---
 
+## CI / Tooling Notes
+- 2025-11-21: Updated `vitest` and `@vitest/coverage-v8` to `^4.0.12` to resolve `npm ci` peer dependency conflicts (SPEC-CI-DEPS-001 / TASK-CI-005). `npm test` passes on Vitest 4.0.12.
+
+---
+
 ## 의존성
 
 | 라이브러리 | 버전 | 용도 |
