@@ -1,16 +1,16 @@
 import eslint from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 
-export default [
+export default defineConfig(
   eslint.configs.recommended,
+  tseslint.configs.recommended,
   {
     ignores: ['dist/**', 'coverage/**'],
   },
   {
     files: ['**/*.ts', '**/*.js'],
     languageOptions: {
-      parser: tsparser,
       globals: {
         window: 'readonly',
         document: 'readonly',
@@ -32,13 +32,9 @@ export default [
         MutationObserver: 'readonly',
       },
     },
-    plugins: {
-      '@typescript-eslint': tseslint,
-    },
     rules: {
-      ...tseslint.configs.recommended.rules,
-      '@typescript-eslint/no-explicit-any': 'warn', // any 허용하지만 경고
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unsafe-function-type': 'warn',
     },
   },
-];
+);
