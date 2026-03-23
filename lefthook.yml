@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{ts,js}"
+      run: bun run lint
+    format-check:
+      glob: "*.{ts,js}"
+      run: bun run format --check
+    test:
+      run: bun run test --run
