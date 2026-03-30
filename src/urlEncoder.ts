@@ -1,7 +1,7 @@
-import Sqids from "sqids";
-import { siteMap, siteMapReverse } from "./knueSites";
-import { ERROR_MESSAGES } from "./constants";
-import { areAllValidNumbers } from "./validators";
+import Sqids from 'sqids';
+import { siteMap, siteMapReverse } from './knueSites';
+import { ERROR_MESSAGES } from './constants';
+import { areAllValidNumbers } from './validators';
 
 /**
  * Sqids 인스턴스 - 생성되는 단축 코드를 최적화하는 설정
@@ -16,12 +16,11 @@ import { areAllValidNumbers } from "./validators";
  */
 const sqids = new Sqids({
   // 일반적인 영문자, 숫자, URL 안전 문자 포함
-  alphabet:
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~",
+  alphabet: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~',
   // 최소 3글자 이상 코드 생성 (너무 짧으면 충돌 위험)
   minLength: 3,
   // 예약어 및 특수 단어는 생성하지 않음
-  blocklist: ["admin", "www", "api"],
+  blocklist: ['admin', 'www', 'api'],
 });
 
 interface EncodeParams {

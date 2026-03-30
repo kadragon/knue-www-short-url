@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterAll, vi, type MockedFunction } from 'vitest';
-import { validateDecodeCode, validateEncodeParams, validateParameterRange, isValidNumber } from '../src/validators';
+import {
+  validateDecodeCode,
+  validateEncodeParams,
+  validateParameterRange,
+  isValidNumber,
+} from '../src/validators';
 import type { encodeURL as encodeURLType, decodeURL as decodeURLType } from '../src/urlEncoder';
 import type { QRCodeRenderersOptions, QRCodeSegment } from 'qrcode';
 
@@ -154,7 +159,12 @@ import QRCode from 'qrcode';
 const mockedEncodeURL = encodeURL as MockedFunction<encodeURLType>;
 const mockedDecodeURL = decodeURL as MockedFunction<decodeURLType>;
 const mockedQRCodeToCanvas = QRCode.toCanvas as MockedFunction<
-  (canvas: HTMLCanvasElement | string, text: string | QRCodeSegment[], options?: QRCodeRenderersOptions, callback?: (error: Error | null | undefined) => void) => void
+  (
+    canvas: HTMLCanvasElement | string,
+    text: string | QRCodeSegment[],
+    options?: QRCodeRenderersOptions,
+    callback?: (error: Error | null | undefined) => void
+  ) => void
 >;
 
 // Import app.ts AFTER mocks are set up
@@ -238,7 +248,12 @@ describe('main.ts Logic', () => {
       expect(link?.href).toBe(expectedUrl);
       expect(link?.textContent).toBe('knue.url.kr/?shortCode'); // Protocol removed for display
       expect(copyInfoDiv?.textContent).toBe('(주소를 클릭하면 클립보드에 복사됩니다.)');
-      expect(QRCode.toCanvas).toHaveBeenCalledWith(qrCanvas, expectedUrl, expect.any(Object), expect.any(Function));
+      expect(QRCode.toCanvas).toHaveBeenCalledWith(
+        qrCanvas,
+        expectedUrl,
+        expect.any(Object),
+        expect.any(Function)
+      );
     });
 
     it('should display an error message on failed encode', () => {
@@ -277,11 +292,11 @@ describe('main.ts Logic', () => {
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       const mockClipboard = {
-        writeText: vi.fn().mockResolvedValue(undefined)
+        writeText: vi.fn().mockResolvedValue(undefined),
       };
       Object.defineProperty(navigator, 'clipboard', {
         value: mockClipboard,
-        writable: true
+        writable: true,
       });
 
       window.onload();
@@ -300,11 +315,11 @@ describe('main.ts Logic', () => {
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       const mockClipboard = {
-        writeText: vi.fn().mockRejectedValue(new Error('Clipboard failed'))
+        writeText: vi.fn().mockRejectedValue(new Error('Clipboard failed')),
       };
       Object.defineProperty(navigator, 'clipboard', {
         value: mockClipboard,
-        writable: true
+        writable: true,
       });
 
       window.onload();
@@ -323,7 +338,7 @@ describe('main.ts Logic', () => {
 
       Object.defineProperty(navigator, 'clipboard', {
         value: undefined,
-        writable: true
+        writable: true,
       });
 
       window.onload();
@@ -342,18 +357,22 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
-      mockedQRCodeToCanvas.mockImplementation((canvas: HTMLCanvasElement, url: string, options: object, callback: (error: Error | null) => void) => {
-        callback(new Error('QR code generation failed'));
-      });
+      mockedQRCodeToCanvas.mockImplementation(
+        (
+          canvas: HTMLCanvasElement,
+          url: string,
+          options: object,
+          callback: (error: Error | null) => void
+        ) => {
+          callback(new Error('QR code generation failed'));
+        }
+      );
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       window.onload();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '오류: QR 코드 생성 실패:',
-        expect.any(Error)
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('오류: QR 코드 생성 실패:', expect.any(Error));
 
       consoleSpy.mockRestore();
     });

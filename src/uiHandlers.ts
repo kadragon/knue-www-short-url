@@ -1,7 +1,7 @@
 // GENERATED FROM SPEC-ui-handlers
 
-import { ERROR_MESSAGES } from "./constants";
-import QRCode from "qrcode";
+import { ERROR_MESSAGES } from './constants';
+import QRCode from 'qrcode';
 
 /**
  * 단축 URL을 클립보드에 복사하고 사용자에게 피드백을 제공합니다.
@@ -33,7 +33,7 @@ export async function handleCopyToClipboard(url: string): Promise<void> {
     await navigator.clipboard.writeText(url);
     alert(ERROR_MESSAGES.CLIPBOARD_COPIED);
   } catch (error) {
-    console.error("Clipboard error:", error);
+    console.error('Clipboard error:', error);
     alert(ERROR_MESSAGES.CLIPBOARD_COPY_FAILED);
   }
 }
@@ -54,10 +54,7 @@ export async function handleCopyToClipboard(url: string): Promise<void> {
  * await handleGenerateQRCode(canvas, 'https://knue.url.kr/?abc123');
  * // Canvas에 QR 코드 렌더링 완료
  */
-export function handleGenerateQRCode(
-  canvas: HTMLCanvasElement,
-  url: string
-): Promise<void> {
+export function handleGenerateQRCode(canvas: HTMLCanvasElement, url: string): Promise<void> {
   return new Promise((resolve) => {
     QRCode.toCanvas(canvas, url, { width: 300 }, (error: Error | null) => {
       if (error) {

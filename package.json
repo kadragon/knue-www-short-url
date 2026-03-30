@@ -23,9 +23,11 @@
   },
   "homepage": "https://github.com/kadragon/knue-www-short-url#readme",
   "dependencies": {
-    "flatted": "^3.4.2",
     "qrcode": "^1.5.4",
     "sqids": "^0.3.0"
+  },
+  "overrides": {
+    "flatted": "^3.4.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
