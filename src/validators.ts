@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC-validation
 
-import { VALIDATION, ERROR_MESSAGES } from "./constants";
+import { VALIDATION, ERROR_MESSAGES } from './constants';
 
 /**
  * 값이 유효한 숫자인지 검증합니다.
@@ -132,7 +132,7 @@ export function validateParameterRange(params: {
   const values = [key, bbsNo, nttNo];
 
   const isOutOfRange = values.some(
-    n => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE
+    (n) => n < VALIDATION.MIN_NUMERIC_VALUE || n > VALIDATION.MAX_NUMERIC_VALUE
   );
 
   if (isOutOfRange) {

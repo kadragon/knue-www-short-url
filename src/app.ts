@@ -1,7 +1,7 @@
-import { encodeURL, decodeURL } from "./urlEncoder";
-import { ERROR_MESSAGES, VALIDATION } from "./constants";
-import { validateDecodeCode, validateEncodeParams, validateParameterRange } from "./validators";
-import { createCopyClickHandler, handleGenerateQRCode } from "./uiHandlers";
+import { encodeURL, decodeURL } from './urlEncoder';
+import { ERROR_MESSAGES, VALIDATION } from './constants';
+import { validateDecodeCode, validateEncodeParams, validateParameterRange } from './validators';
+import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
 
 // Global error handling and monitoring
 window.addEventListener('error', (event: ErrorEvent) => {
@@ -10,7 +10,7 @@ window.addEventListener('error', (event: ErrorEvent) => {
     filename: event.filename,
     lineno: event.lineno,
     colno: event.colno,
-    stack: event.error?.stack
+    stack: event.error?.stack,
   });
 });
 
@@ -32,16 +32,16 @@ window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => 
 window.onload = function () {
   // DOM 요소 참조 (페이지 로드 시 요소가 존재해야 함)
   const search = window.location.search;
-  const resultDiv = document.getElementById("result") as HTMLDivElement;
-  const qrCanvas = document.getElementById("qrCanvas") as HTMLCanvasElement;
-  const copyInfoDiv = document.getElementById("copy-info") as HTMLDivElement;
+  const resultDiv = document.getElementById('result') as HTMLDivElement;
+  const qrCanvas = document.getElementById('qrCanvas') as HTMLCanvasElement;
+  const copyInfoDiv = document.getElementById('copy-info') as HTMLDivElement;
 
   /**
    * MODE 1: Decode Mode
    * 형식: ?<code> (예: ?XyZ123)
    * 동작: 단축 코드를 원본 URL로 디코딩하여 리다이렉트
    */
-  if (search && !search.includes("=")) {
+  if (search && !search.includes('=')) {
     // URL에서 '?' 제거하고 공백 정리
     const code = search.substring(1).trim();
 
@@ -49,7 +49,7 @@ window.onload = function () {
     const validation = validateDecodeCode(code);
     if (!validation.valid) {
       alert(validation.error);
-      window.location.href = "/";
+      window.location.href = '/';
       return;
     }
 
@@ -62,7 +62,7 @@ window.onload = function () {
       window.location.href = decodeResult.url;
     } else {
       alert(ERROR_MESSAGES.INVALID_CODE);
-      window.location.href = "/";
+      window.location.href = '/';
     }
     return;
   }
@@ -72,7 +72,7 @@ window.onload = function () {
    * 형식: ?site=<site>&key=<key>&bbsNo=<bbsNo>&nttNo=<nttNo>
    * 동작: URL 파라미터를 단축 코드로 인코딩하고 QR 코드 생성
    */
-  if (search && search.includes("=")) {
+  if (search && search.includes('=')) {
     // URL 쿼리 문자열 파싱 (예: "?site=www&key=123" → {site: "www", key: "123"})
     const searchParams = new URLSearchParams(search);
     const params = Object.fromEntries(searchParams.entries());
@@ -110,17 +110,17 @@ window.onload = function () {
       const shortUrl = `${window.location.origin}${window.location.pathname}?${result.code}`;
 
       // 단축 URL을 표시할 <a> 요소 생성
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = shortUrl;
       // 사용자 표시용: 프로토콜 제거 (knue.url.kr/?abc123로 표시)
-      link.textContent = shortUrl.replace(/^https?:\/\//, "");
+      link.textContent = shortUrl.replace(/^https?:\/\//, '');
       resultDiv.appendChild(link);
 
       // 클립보드 복사 안내 텍스트 표시
-      copyInfoDiv.textContent = "(주소를 클릭하면 클립보드에 복사됩니다.)";
+      copyInfoDiv.textContent = '(주소를 클릭하면 클립보드에 복사됩니다.)';
 
       // 링크 클릭 시 클립보드에 복사하는 이벤트 핸들러 등록
-      link.addEventListener("click", createCopyClickHandler(shortUrl));
+      link.addEventListener('click', createCopyClickHandler(shortUrl));
 
       // QR 코드 생성 (Canvas에 렌더링, uiHandlers.ts 사용)
       handleGenerateQRCode(qrCanvas, shortUrl);
@@ -136,5 +136,5 @@ window.onload = function () {
    * 형식: / (쿼리 문자열 없음)
    * 동작: 기본 안내 메시지 표시
    */
-  resultDiv.innerText = "KNUE 단축 URL 생성기";
+  resultDiv.innerText = 'KNUE 단축 URL 생성기';
 };
