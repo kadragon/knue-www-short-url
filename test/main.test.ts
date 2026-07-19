@@ -244,6 +244,9 @@ describe('main.ts Logic', () => {
     });
     localStorage.clear();
 
+    // Mock fetch so decode-mode's analytics ping never hits the network.
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+
     // Set up DOM structure similar to index.html
     document.body.innerHTML = `
       <div id="container">
@@ -259,6 +262,7 @@ describe('main.ts Logic', () => {
     // Restore original window properties
     Object.defineProperty(window, 'location', { value: originalLocation });
     window.alert = originalAlert;
+    vi.unstubAllGlobals();
   });
 
   describe('Decode Mode', () => {
@@ -270,6 +274,8 @@ describe('main.ts Logic', () => {
 
       expect(mockedDecodeURL).toHaveBeenCalledWith('validCode');
       expect(window.location.href).toBe('https://www.knue.ac.kr/decoded');
+      // Analytics ping fires once for a successful (KNUE-valid) decode.
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
 
     it('should show an alert and redirect to home on failed decode', () => {
@@ -280,6 +286,7 @@ describe('main.ts Logic', () => {
 
       expect(window.alert).toHaveBeenCalledWith('잘못된 주소입니다.');
       expect(window.location.href).toBe('/');
+      expect(fetch).not.toHaveBeenCalled();
     });
 
     it('should redirect to the app root (not the domain root) on a sub-path deployment', () => {
@@ -291,6 +298,7 @@ describe('main.ts Logic', () => {
       window.onload();
 
       expect(window.location.href).toBe('/s/');
+      expect(fetch).not.toHaveBeenCalled();
     });
   });
 

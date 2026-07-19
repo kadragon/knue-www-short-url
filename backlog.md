@@ -6,8 +6,10 @@
 ## Features
 
 - [ ] URL 유효기간 설정 — 만료 시각을 short code 자체에 인코딩(Sqids 배열에 expiry 추가). localStorage는 origin·브라우저 스코프라 공유 URL(타 기기/브라우저 수신자)에서 만료 검증 불가하므로 배제. 기존 코드 하위호환(만료 없는 레거시 코드) 및 code 길이 증가 고려 필요. Effort L.
-- [ ] 통계 수집 — 인바운드(축약 주소 접속) 시점에만 Umami로 short code + timestamp 전송(최소 데이터, PII 없음). 리다이렉트 직전 `navigator.sendBeacon`/`keepalive`로 전송 보장(즉시 이탈 시 유실 방지). 앱은 정적 유지, CSP `connect-src`/`script-src`에 Umami 호스트 화이트리스트 추가 선행. Effort L.
-- [ ] SEO — 최소 범위: description 메타 + OG/twitter 카드(og:title/description/type/image) + 정적 OG 이미지 1장(사이트 전역 고정). 크롤러가 JS 미실행이라 단축 URL별 동적 OG는 불가 — 전역 정적 카드로 한정. sitemap·structured data 제외(내부 도구). Effort S.
+
+## Tech Debt
+
+- [ ] [TEST] open-redirect guard의 non-KNUE truthy-url 브랜치 미테스트 — `decodeURL`이 `{url:'https://evil.example/'}`처럼 truthy지만 `KNUE_DOMAIN`으로 시작하지 않는 값을 반환할 때 `alert(INVALID_CODE)` + fetch 미호출을 검증. 현재 else-branch 테스트는 `url` undefined(falsy 단락)만 커버해 실제 가드 브랜치(`app.ts:62` `&&` 우변)가 미검증 상태. 이번 스프린트 이전부터 존재하던 갭. Effort S.
 
 ---
 
