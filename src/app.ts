@@ -3,6 +3,7 @@ import { ERROR_MESSAGES, VALIDATION } from './constants';
 import { validateDecodeCode, validateEncodeParams, validateParameterRange } from './validators';
 import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
 import { logError } from './errorLogger';
+import { trackRedirect } from './analytics';
 
 // Global error handling and monitoring
 window.addEventListener('error', (event: ErrorEvent) => {
@@ -60,6 +61,9 @@ window.onload = function () {
     // 보안: 디코딩된 URL이 KNUE 도메인인지 검증 후 리다이렉트
     // KNUE 도메인이 아니면 홈으로 리다이렉트 (도메인 하이재킹 방지)
     if (decodeResult.url && decodeResult.url.startsWith(VALIDATION.KNUE_DOMAIN)) {
+      // Best-effort inbound tracking: fire before navigation so the redirect
+      // is still counted despite the immediate page unload.
+      trackRedirect(code);
       window.location.href = decodeResult.url;
     } else {
       alert(ERROR_MESSAGES.INVALID_CODE);

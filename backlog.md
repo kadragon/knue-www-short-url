@@ -7,7 +7,10 @@
 
 - [ ] 다국어 지원(i18n) — 한국어+영어만. 라이브러리 없이 `ERROR_MESSAGES`를 `{ ko, en }` 딕셔너리로 확장, locale은 `navigator.language` 기본 + 수동 토글, 의존성 0. Effort L.
 - [ ] URL 유효기간 설정 — 만료 시각을 short code 자체에 인코딩(Sqids 배열에 expiry 추가). localStorage는 origin·브라우저 스코프라 공유 URL(타 기기/브라우저 수신자)에서 만료 검증 불가하므로 배제. 기존 코드 하위호환(만료 없는 레거시 코드) 및 code 길이 증가 고려 필요. Effort L.
-- [ ] 통계 수집 — 인바운드(축약 주소 접속) 시점에만 Umami로 short code + timestamp 전송(최소 데이터, PII 없음). 리다이렉트 직전 `navigator.sendBeacon`/`keepalive`로 전송 보장(즉시 이탈 시 유실 방지). 앱은 정적 유지, CSP `connect-src`/`script-src`에 Umami 호스트 화이트리스트 추가 선행. Effort L.
+
+## Tech Debt
+
+- [ ] [TEST] open-redirect guard의 non-KNUE truthy-url 브랜치 미테스트 — `decodeURL`이 `{url:'https://evil.example/'}`처럼 truthy지만 `KNUE_DOMAIN`으로 시작하지 않는 값을 반환할 때 `alert(INVALID_CODE)` + fetch 미호출을 검증. 현재 else-branch 테스트는 `url` undefined(falsy 단락)만 커버해 실제 가드 브랜치(`app.ts:62` `&&` 우변)가 미검증 상태. 이번 스프린트 이전부터 존재하던 갭. Effort S.
 
 ---
 
