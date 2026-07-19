@@ -228,6 +228,17 @@ describe('main.ts Logic', () => {
       expect(window.alert).toHaveBeenCalledWith('잘못된 주소입니다.');
       expect(window.location.href).toBe('/');
     });
+
+    it('should redirect to the app root (not the domain root) on a sub-path deployment', () => {
+      // Deployed under `/s/`: a failed decode must stay inside the app.
+      window.location.pathname = '/s/';
+      window.location.search = '?invalidCode';
+      mockedDecodeURL.mockReturnValue({ error: 'Invalid code' });
+
+      window.onload();
+
+      expect(window.location.href).toBe('/s/');
+    });
   });
 
   describe('Encode Mode', () => {
