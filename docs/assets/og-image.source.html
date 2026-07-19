@@ -1,0 +1,82 @@
+<!doctype html>
+<!--
+  Render source for public/og-image.png (site-wide static Open Graph card).
+  Regenerate: screenshot the .card element at exactly 1200x630 and save as
+  public/og-image.png. Palette mirrors src/styles/main.css.
+-->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Pretendard",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+      .card {
+        width: 1200px;
+        height: 630px;
+        background: #f0f2f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .inner {
+        width: 1080px;
+        height: 510px;
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 32px;
+        padding: 80px 96px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .eyebrow {
+        font-size: 34px;
+        font-weight: 600;
+        color: #606770;
+        letter-spacing: 0.02em;
+      }
+      .title {
+        margin-top: 28px;
+        font-size: 96px;
+        font-weight: 800;
+        color: #1877f2;
+        line-height: 1.1;
+      }
+      .subtitle {
+        margin-top: 36px;
+        font-size: 40px;
+        font-weight: 500;
+        color: #606770;
+        line-height: 1.4;
+      }
+      .url {
+        margin-top: 56px;
+        font-size: 34px;
+        font-weight: 600;
+        color: #1877f2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="inner">
+        <div class="eyebrow">한국교원대학교</div>
+        <div class="title">단축 URL</div>
+        <div class="subtitle">게시판 주소를 짧은 링크로 변환하고 QR 코드를 생성합니다.</div>
+        <div class="url">www.knue.ac.kr/s/</div>
+      </div>
+    </div>
+  </body>
+</html>
