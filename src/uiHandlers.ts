@@ -56,13 +56,19 @@ export async function handleCopyToClipboard(url: string): Promise<void> {
  * // Canvas에 QR 코드 렌더링 완료
  */
 export async function handleGenerateQRCode(canvas: HTMLCanvasElement, url: string): Promise<void> {
-  const { default: QRCode } = await import('qrcode');
-  return new Promise((resolve) => {
-    QRCode.toCanvas(canvas, url, { width: 300 }, (error: Error | null | undefined) => {
-      if (error) logError('QRCode', error);
-      resolve(); // 에러 여부와 관계없이 resolve
+  try {
+    const { default: QRCode } = await import('qrcode');
+    await new Promise<void>((resolve) => {
+      QRCode.toCanvas(canvas, url, { width: 300 }, (error: Error | null | undefined) => {
+        if (error) logError('QRCode', error);
+        resolve(); // 에러 여부와 관계없이 resolve
+      });
     });
-  });
+  } catch (error) {
+    // 동적 청크 로드 실패(네트워크/오래된 배포 등)도 삼켜서 always-resolve 계약을 유지.
+    // QR은 선택사항이므로 호출부(fire-and-forget)에 unhandled rejection을 전파하지 않는다.
+    logError('QRCode', error);
+  }
 }
 
 /**

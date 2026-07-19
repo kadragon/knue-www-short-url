@@ -10,12 +10,18 @@
  * @param meta - Optional extra fields merged into the logged JSON payload.
  */
 export function logError(context: string, error: unknown, meta?: Record<string, unknown>): void {
-  const err = error instanceof Error ? error : undefined;
+  // Read message/stack structurally so non-Error rejection reasons (e.g. plain
+  // { message, stack } objects from cross-context/promise rejections) keep their
+  // detail instead of collapsing to "[object Object]".
+  const record =
+    typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : undefined;
+  const message = typeof record?.message === 'string' ? record.message : String(error);
+  const stack = typeof record?.stack === 'string' ? record.stack : undefined;
   console.error(
     `[${context}]`,
     JSON.stringify({
-      message: err?.message ?? String(error),
-      stack: err?.stack,
+      message,
+      stack,
       ...meta,
     })
   );
