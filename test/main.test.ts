@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeEach, afterAll, vi, type MockedFunction } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll,
+  vi,
+  type MockedFunction,
+} from 'vitest';
 import {
   validateDecodeCode,
   validateEncodeParams,
@@ -7,6 +16,35 @@ import {
 } from '../src/validators';
 import type { encodeURL as encodeURLType, decodeURL as decodeURLType } from '../src/urlEncoder';
 import type { QRCodeRenderersOptions, QRCodeSegment } from 'qrcode';
+import { setLocale } from '../src/i18n';
+
+// Node 26+ ships an experimental global `localStorage` (gated behind
+// `--localstorage-file`) that shadows jsdom's implementation, and vitest's
+// jsdom environment does not override an already-present global (see
+// vitest's `populateGlobal` allow-list). Polyfill with a plain in-memory
+// Storage so `localStorage` behaves as it does in a real browser.
+if (typeof localStorage === 'undefined' || typeof localStorage.setItem !== 'function') {
+  const store = new Map<string, string>();
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, String(value));
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+      clear: () => {
+        store.clear();
+      },
+      key: (index: number) => Array.from(store.keys())[index] ?? null,
+      get length() {
+        return store.size;
+      },
+    } satisfies Storage,
+  });
+}
 
 // Validator Unit Tests
 describe('Validators Module', () => {
@@ -197,9 +235,19 @@ describe('main.ts Logic', () => {
     });
     window.alert = vi.fn();
 
+    // Fix navigator.language to Korean and clear any persisted locale so
+    // `initLocale()` (called by `window.onload`) always resolves to 'ko'
+    // unless a test explicitly opts into English.
+    Object.defineProperty(navigator, 'language', {
+      value: 'ko-KR',
+      configurable: true,
+    });
+    localStorage.clear();
+
     // Set up DOM structure similar to index.html
     document.body.innerHTML = `
       <div id="container">
+        <button id="locale-toggle" type="button"></button>
         <div id="result"></div>
         <div id="copy-info"></div>
         <canvas id="qrCanvas"></canvas>
@@ -407,6 +455,55 @@ describe('main.ts Logic', () => {
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('KNUE 단축 URL 생성기');
+    });
+  });
+
+  describe('Locale (i18n)', () => {
+    afterEach(() => {
+      setLocale('ko'); // avoid leaking locale state into unrelated tests
+    });
+
+    it('should display English strings when the locale is set to en', () => {
+      setLocale('en');
+      window.location.search = '';
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv?.innerText).toBe('KNUE Short URL Generator');
+      expect(document.title).toBe('KNUE Short URL');
+    });
+
+    it('should show the English encode error message in en locale', () => {
+      setLocale('en');
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      mockedEncodeURL.mockReturnValue({ error: 'Invalid site' });
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv?.innerText).toBe('Error: Invalid site');
+    });
+
+    it('should flip visible strings ko -> en -> ko when the locale toggle is clicked', () => {
+      window.location.search = '';
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      const toggle = document.getElementById('locale-toggle') as HTMLButtonElement;
+
+      expect(resultDiv?.innerText).toBe('KNUE 단축 URL 생성기');
+      expect(toggle.textContent).toBe('EN');
+
+      toggle.click();
+
+      expect(resultDiv?.innerText).toBe('KNUE Short URL Generator');
+      expect(toggle.textContent).toBe('한국어');
+
+      toggle.click();
+
+      expect(resultDiv?.innerText).toBe('KNUE 단축 URL 생성기');
+      expect(toggle.textContent).toBe('EN');
     });
   });
 });

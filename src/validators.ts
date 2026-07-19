@@ -1,6 +1,7 @@
 // GENERATED FROM SPEC-validation
 
-import { VALIDATION, ERROR_MESSAGES } from './constants';
+import { VALIDATION } from './constants';
+import { t } from './i18n';
 
 /**
  * 값이 유효한 숫자인지 검증합니다.
@@ -64,11 +65,11 @@ interface ValidationResult {
  */
 export function validateDecodeCode(code: unknown): ValidationResult {
   if (!code || typeof code !== 'string') {
-    return { valid: false, error: ERROR_MESSAGES.INVALID_CODE };
+    return { valid: false, error: t('INVALID_CODE') };
   }
 
   if (code.length > VALIDATION.MAX_CODE_LENGTH) {
-    return { valid: false, error: ERROR_MESSAGES.INVALID_CODE_LENGTH };
+    return { valid: false, error: t('INVALID_CODE_LENGTH') };
   }
 
   return { valid: true };
@@ -101,7 +102,7 @@ export function validateEncodeParams(params: EncodeParams): ValidationResult {
   const { site, key, bbsNo, nttNo } = params;
 
   if (!site || !areAllValidNumbers(key, bbsNo, nttNo)) {
-    return { valid: false, error: ERROR_MESSAGES.MISSING_PARAMETERS };
+    return { valid: false, error: t('MISSING_PARAMETERS') };
   }
 
   return { valid: true };
@@ -136,7 +137,7 @@ export function validateParameterRange(params: {
   );
 
   if (isOutOfRange) {
-    return { valid: false, error: ERROR_MESSAGES.INVALID_PARAMETER_RANGE };
+    return { valid: false, error: t('INVALID_PARAMETER_RANGE') };
   }
 
   return { valid: true };

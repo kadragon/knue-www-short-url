@@ -1,6 +1,6 @@
 import Sqids from 'sqids';
 import { siteMap, siteMapReverse } from './knueSites';
-import { ERROR_MESSAGES } from './constants';
+import { t } from './i18n';
 import { areAllValidNumbers } from './validators';
 
 /**
@@ -66,10 +66,10 @@ interface EncodeResult {
 export function encodeURL({ site, key, bbsNo, nttNo }: EncodeParams): EncodeResult {
   const siteNum = siteMap[site];
   if (!siteNum) {
-    return { error: ERROR_MESSAGES.UNSUPPORTED_SITE(site) };
+    return { error: t('UNSUPPORTED_SITE', site) };
   }
   if (!areAllValidNumbers(key, bbsNo, nttNo)) {
-    return { error: ERROR_MESSAGES.INVALID_NUMERIC_PARAMS };
+    return { error: t('INVALID_NUMERIC_PARAMS') };
   }
   return { code: sqids.encode([siteNum, key, bbsNo, nttNo]) };
 }
@@ -100,13 +100,13 @@ interface DecodeResult {
 export function decodeURL(code: string): DecodeResult {
   const arr = sqids.decode(code);
   if (arr.length !== 4) {
-    return { error: ERROR_MESSAGES.INVALID_CODE_FORMAT };
+    return { error: t('INVALID_CODE_FORMAT') };
   }
 
   const [siteNum, key, bbsNo, nttNo] = arr;
   const site = siteMapReverse[siteNum];
   if (!site) {
-    return { error: ERROR_MESSAGES.UNKNOWN_SITE_CODE };
+    return { error: t('UNKNOWN_SITE_CODE') };
   }
 
   const url = new URL(`https://www.knue.ac.kr/${site}/selectBbsNttView.do`);
