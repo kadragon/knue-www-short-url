@@ -1,10 +1,8 @@
-# Exclude spec, agents, and tasks documentation folders
-# These folders contain internal development documentation
-# and follow different formatting conventions
+# Exclude internal development documentation folders
+# These follow different formatting conventions (Gherkin blocks, tables)
 
-.spec/
+docs/
 .agents/
-.tasks/
 
 # Also ignore node_modules if scanned
 node_modules/
