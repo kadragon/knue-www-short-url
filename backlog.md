@@ -5,7 +5,6 @@
 
 ## Features
 
-- [ ] 다국어 지원(i18n) — 한국어+영어만. 라이브러리 없이 `ERROR_MESSAGES`를 `{ ko, en }` 딕셔너리로 확장, locale은 `navigator.language` 기본 + 수동 토글, 의존성 0. Effort L.
 - [ ] URL 유효기간 설정 — 만료 시각을 short code 자체에 인코딩(Sqids 배열에 expiry 추가). localStorage는 origin·브라우저 스코프라 공유 URL(타 기기/브라우저 수신자)에서 만료 검증 불가하므로 배제. 기존 코드 하위호환(만료 없는 레거시 코드) 및 code 길이 증가 고려 필요. Effort L.
 
 ## Tech Debt

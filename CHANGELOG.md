@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- [done] Features: 다국어 지원(i18n) — `ERROR_MESSAGES` `{ ko, en }` 확장 + `src/i18n.ts` 로케일 리졸버(`navigator.language` 기본 + localStorage 지속 수동 토글), 의존성 0 (2026-07-19)
 - [done] 통계 수집 (Umami inbound stats): decode 리다이렉트 직전 `keepalive` fetch로 short code를 Umami Cloud `/api/send`에 전송, CSP `connect-src` 화이트리스트 (2026-07-19)
 - [done] SEO — description 메타 + OG/Twitter 카드 + 정적 OG 이미지 1장(1200×630) (2026-07-19)
 - [done] Enhancements: 경량 중앙 에러 로거(`logError`) 통합 + qrcode 지연 로딩(코드 분할, 메인 진입 청크 38.94→14.05 kB) (2026-07-19)

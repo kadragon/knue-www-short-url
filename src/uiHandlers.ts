@@ -1,7 +1,7 @@
 // GENERATED FROM SPEC-ui-handlers
 
-import { ERROR_MESSAGES } from './constants';
 import { logError } from './errorLogger';
+import { t } from './i18n';
 
 /**
  * 단축 URL을 클립보드에 복사하고 사용자에게 피드백을 제공합니다.
@@ -26,15 +26,15 @@ import { logError } from './errorLogger';
 export async function handleCopyToClipboard(url: string): Promise<void> {
   try {
     if (!navigator.clipboard) {
-      alert(ERROR_MESSAGES.CLIPBOARD_NOT_SUPPORTED);
+      alert(t('CLIPBOARD_NOT_SUPPORTED'));
       return;
     }
 
     await navigator.clipboard.writeText(url);
-    alert(ERROR_MESSAGES.CLIPBOARD_COPIED);
+    alert(t('CLIPBOARD_COPIED'));
   } catch (error) {
     logError('Clipboard', error);
-    alert(ERROR_MESSAGES.CLIPBOARD_COPY_FAILED);
+    alert(t('CLIPBOARD_COPY_FAILED'));
   }
 }
 

@@ -1,8 +1,9 @@
 import { encodeURL, decodeURL } from './urlEncoder';
-import { ERROR_MESSAGES, VALIDATION } from './constants';
+import { VALIDATION } from './constants';
 import { validateDecodeCode, validateEncodeParams, validateParameterRange } from './validators';
 import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
 import { logError } from './errorLogger';
+import { t, initLocale, setLocale, getLocale } from './i18n';
 import { trackRedirect } from './analytics';
 
 // Global error handling and monitoring
@@ -29,12 +30,24 @@ window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => 
  * URL 파라미터를 파싱하여 적절한 모드로 라우팅합니다.
  * 모든 입력값은 validators.ts의 함수로 검증합니다.
  */
-window.onload = function () {
+function render(): void {
+  // 로케일에 따라 문서 제목과 로케일 토글 버튼 라벨을 갱신
+  document.title = t('APP_TITLE');
+  const localeToggle = document.getElementById('locale-toggle') as HTMLButtonElement | null;
+  if (localeToggle) {
+    localeToggle.textContent = t('LOCALE_TOGGLE');
+  }
+
   // DOM 요소 참조 (페이지 로드 시 요소가 존재해야 함)
   const search = window.location.search;
   const resultDiv = document.getElementById('result') as HTMLDivElement;
   const qrCanvas = document.getElementById('qrCanvas') as HTMLCanvasElement;
   const copyInfoDiv = document.getElementById('copy-info') as HTMLDivElement;
+
+  // 재렌더(로케일 토글 등) 시 이전 결과가 누적되지 않도록 초기화.
+  // Encode-success 모드는 resultDiv에 <a>를 appendChild하므로, 초기화 없이
+  // 재렌더하면 링크가 중복 누적된다.
+  resultDiv.replaceChildren();
 
   /**
    * MODE 1: Decode Mode
@@ -66,7 +79,7 @@ window.onload = function () {
       trackRedirect(code);
       window.location.href = decodeResult.url;
     } else {
-      alert(ERROR_MESSAGES.INVALID_CODE);
+      alert(t('INVALID_CODE'));
       // See above: stay on the app root for sub-path deployments.
       window.location.href = window.location.pathname;
     }
@@ -123,7 +136,7 @@ window.onload = function () {
       resultDiv.appendChild(link);
 
       // 클립보드 복사 안내 텍스트 표시
-      copyInfoDiv.textContent = '(주소를 클릭하면 클립보드에 복사됩니다.)';
+      copyInfoDiv.textContent = t('COPY_INFO');
 
       // 링크 클릭 시 클립보드에 복사하는 이벤트 핸들러 등록
       link.addEventListener('click', createCopyClickHandler(shortUrl));
@@ -132,7 +145,7 @@ window.onload = function () {
       handleGenerateQRCode(qrCanvas, shortUrl);
     } else {
       // 인코딩 실패 시: 에러 메시지 표시 (지원되지 않는 사이트 등)
-      resultDiv.innerText = `오류: ${result.error}`;
+      resultDiv.innerText = t('ERROR_PREFIX') + result.error;
     }
     return; // Encode 모드 처리 완료
   }
@@ -142,5 +155,31 @@ window.onload = function () {
    * 형식: / (쿼리 문자열 없음)
    * 동작: 기본 안내 메시지 표시
    */
-  resultDiv.innerText = 'KNUE 단축 URL 생성기';
+  resultDiv.innerText = t('DEFAULT_MESSAGE');
+}
+
+/**
+ * 로케일 토글 버튼에 클릭 이벤트를 연결합니다.
+ *
+ * `window.onload`에서 한 번만 호출되며, 버튼 클릭 시 로케일을 전환하고
+ * `render()`를 다시 실행해 화면에 보이는 문자열을 갱신합니다.
+ * (render()가 재실행될 때마다 다시 바인딩되지 않도록 render() 밖에서 호출)
+ */
+function wireLocaleToggle(): void {
+  const localeToggle = document.getElementById('locale-toggle') as HTMLButtonElement | null;
+  if (!localeToggle) {
+    return;
+  }
+
+  localeToggle.textContent = t('LOCALE_TOGGLE');
+  localeToggle.addEventListener('click', () => {
+    setLocale(getLocale() === 'ko' ? 'en' : 'ko');
+    render();
+  });
+}
+
+window.onload = function () {
+  initLocale();
+  render();
+  wireLocaleToggle();
 };
