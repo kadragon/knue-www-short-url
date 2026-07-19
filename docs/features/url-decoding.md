@@ -1,5 +1,7 @@
 # URL 디코딩 (원본 URL 복원)
 
+**Spec-ID**: `SPEC-URL-DEC-001`
+
 **Intent**: 단축 코드를 원본 KNUE URL로 복원
 
 **Scope**:
@@ -59,7 +61,7 @@
 
 ---
 
-## API (Summary)
+## API
 
 ```javascript
 function decodeURL(code: string)
@@ -69,7 +71,7 @@ function decodeURL(code: string)
 - `code` (string): Sqids로 인코딩된 단축 코드
 
 **Returns**:
-- Success: `{url: string}` - https://www.knue.ac.kr/로 시작하는 완전한 URL
+- Success: `{url: string}` - `https://www.knue.ac.kr/`로 시작하는 완전한 URL
 - Failure: `{error: string}` - 한글 오류 메시지
 
 **Errors**:
@@ -93,14 +95,25 @@ function decodeURL(code: string)
 
 ## Security
 
-- **Domain Whitelisting**: 모든 반환 URL은 https://www.knue.ac.kr/로 제한 (app.js에서 검증)
+- **Domain Whitelisting**: 모든 반환 URL은 `https://www.knue.ac.kr/`로 제한 (app.js에서 검증)
 - **No Injection**: URLSearchParams로 안전한 파라미터 인코딩
+
+---
+
+## Acceptance / DoD
+
+- [x] AC-1~5 구현
+- [x] 모든 테스트 통과
+- [x] 100% 라인 커버리지
+- [x] 원본 파라미터 왕복 검증
+- [x] 보안: URL 도메인 검증 (app.js 포함)
+
+**Test Files**: `test/index.test.js` — decodeURL 테스트
 
 ---
 
 ## Tracing
 
-**Spec-ID**: `SPEC-URL-DEC-001`
 **Trace-To**:
 - `test/index.test.js` (lines 12-42, 50-54)
 - `src/js/urlEncoder.js:decodeURL()` (lines 66-86)

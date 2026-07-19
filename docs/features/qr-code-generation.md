@@ -1,5 +1,7 @@
 # QR 코드 생성
 
+**Spec-ID**: `SPEC-QR-001`
+
 **Intent**: 인코딩된 단축 URL의 QR 코드를 생성하여 사용자에게 표시
 
 **Scope**:
@@ -52,7 +54,7 @@
 
 ---
 
-## API (Summary)
+## API
 
 **Library**: qrcode.js (`npm install qrcode`)
 
@@ -67,7 +69,7 @@ QRCode.toCanvas(canvasElement, url, options, callback)
 - `callback` (function): `(error) => void`
 
 **Error Handling**:
-- error ≠ null인 경우: console.error() 기록, 사용자 알림 미제공
+- error ≠ null: console.error() 기록, 사용자 알림 미제공
 - Canvas 요소 미존재: 런타임 오류 (명시적 검증 필요)
 
 ---
@@ -88,7 +90,6 @@ QRCode.toCanvas(canvasElement, url, options, callback)
 
 ## Tracing
 
-**Spec-ID**: `SPEC-QR-001`
 **Trace-To**:
 - `test/main.test.js` (lines 82-100)
 - `src/js/app.js:QRCode.toCanvas()` (lines 108-113)
