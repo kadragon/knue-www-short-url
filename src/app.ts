@@ -49,7 +49,9 @@ window.onload = function () {
     const validation = validateDecodeCode(code);
     if (!validation.valid) {
       alert(validation.error);
-      window.location.href = '/';
+      // Redirect to the app root (current path), not the domain root, so
+      // sub-path deployments like `/s/` keep the user inside the app.
+      window.location.href = window.location.pathname;
       return;
     }
 
@@ -62,7 +64,8 @@ window.onload = function () {
       window.location.href = decodeResult.url;
     } else {
       alert(ERROR_MESSAGES.INVALID_CODE);
-      window.location.href = '/';
+      // See above: stay on the app root for sub-path deployments.
+      window.location.href = window.location.pathname;
     }
     return;
   }
