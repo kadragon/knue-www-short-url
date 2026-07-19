@@ -26,9 +26,6 @@ export const ERROR_MESSAGES = {
   CLIPBOARD_COPIED: '클립보드에 복사되었습니다.',
   CLIPBOARD_COPY_FAILED: '클립보드 복사에 실패했습니다.',
   CLIPBOARD_NOT_SUPPORTED: '자동 복사 기능이 지원되지 않는 환경입니다. 수동으로 복사해주세요.',
-
-  // QR code messages
-  QR_CODE_ERROR: '오류: QR 코드 생성 실패:',
 } as const;
 
 /**

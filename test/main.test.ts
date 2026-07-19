@@ -170,6 +170,11 @@ const mockedQRCodeToCanvas = QRCode.toCanvas as MockedFunction<
 // Import app.ts AFTER mocks are set up
 import '../src/app';
 
+// Flush pending microtasks/macrotasks. `handleGenerateQRCode` now awaits a
+// dynamic `import('qrcode')` before calling `toCanvas`, and `window.onload`
+// invokes it fire-and-forget, so QR assertions must wait a tick.
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 describe('main.ts Logic', () => {
   let originalLocation: Location;
   let originalAlert: typeof window.alert;
@@ -242,11 +247,12 @@ describe('main.ts Logic', () => {
   });
 
   describe('Encode Mode', () => {
-    it('should display the shortened URL and QR code on successful encode', () => {
+    it('should display the shortened URL and QR code on successful encode', async () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
       window.onload();
+      await flushPromises(); // wait for the lazily imported qrcode module
 
       const resultDiv = document.getElementById('result');
       const link = resultDiv?.querySelector('a');
@@ -364,7 +370,7 @@ describe('main.ts Logic', () => {
       );
     });
 
-    it('should handle QR code generation error', () => {
+    it('should handle QR code generation error', async () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
@@ -382,8 +388,13 @@ describe('main.ts Logic', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       window.onload();
+      await flushPromises(); // wait for the lazily imported qrcode module
 
-      expect(consoleSpy).toHaveBeenCalledWith('오류: QR 코드 생성 실패:', expect.any(Error));
+      // Failure path now logs via the central structured logError('QRCode', ...).
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[QRCode]',
+        expect.stringContaining('QR code generation failed')
+      );
 
       consoleSpy.mockRestore();
     });
