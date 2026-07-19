@@ -505,5 +505,23 @@ describe('main.ts Logic', () => {
       expect(resultDiv?.innerText).toBe('KNUE 단축 URL 생성기');
       expect(toggle.textContent).toBe('EN');
     });
+
+    it('should not accumulate duplicate links when toggling locale in encode mode', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      const toggle = document.getElementById('locale-toggle') as HTMLButtonElement;
+      expect(resultDiv?.querySelectorAll('a')).toHaveLength(1);
+
+      // Re-rendering on locale toggle must be idempotent — a single <a>, not stacked.
+      toggle.click();
+      expect(resultDiv?.querySelectorAll('a')).toHaveLength(1);
+
+      toggle.click();
+      expect(resultDiv?.querySelectorAll('a')).toHaveLength(1);
+    });
   });
 });

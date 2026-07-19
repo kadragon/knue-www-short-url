@@ -43,6 +43,11 @@ function render(): void {
   const qrCanvas = document.getElementById('qrCanvas') as HTMLCanvasElement;
   const copyInfoDiv = document.getElementById('copy-info') as HTMLDivElement;
 
+  // 재렌더(로케일 토글 등) 시 이전 결과가 누적되지 않도록 초기화.
+  // Encode-success 모드는 resultDiv에 <a>를 appendChild하므로, 초기화 없이
+  // 재렌더하면 링크가 중복 누적된다.
+  resultDiv.replaceChildren();
+
   /**
    * MODE 1: Decode Mode
    * 형식: ?<code> (예: ?XyZ123)
