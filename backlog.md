@@ -5,6 +5,7 @@
 
 ## Enhancements
 
+- [ ] 잘못된 코드 리다이렉트 경로 이식성 — `app.ts:52,65`의 `window.location.href = '/'`가 앱 루트(`/s/`)가 아닌 도메인 루트로 이동. `/s/` 배포에서 앱을 벗어남. `window.location.pathname` 또는 `import.meta.env.BASE_URL` 기준으로 수정 검토. Effort S. (PR #49 리뷰 발견, 런타임 동작 변경이라 별도 처리)
 - [ ] 에러 처리 개선 — 현재 `console.error`만 사용. Sentry 등 모니터링 연동 검토. Effort M. (결정 필요: 미해결 질문 2)
 - [ ] 성능 최적화(번들 크기) — 현재 38.94 KB. `qrcode.js` 제거 옵션 검토(별도 서버 생성). Effort M.
 

@@ -11,7 +11,7 @@ Runtime: Bun. Build: Vite. Test: Vitest. No server — the build output is stati
 | Test | `bun run test --run` |
 | Test + coverage | `bun run test -- --coverage` |
 | Lint | `bun run lint` (`eslint src test`) |
-| Format | `bun run format` (Prettier write) · `bun run format --check` to verify |
+| Format | `bun run format` (Prettier write) · `bun run format:check` to verify (non-mutating gate) |
 | Build | `bun run build` → `dist/` |
 | Dependency audit | `bun pm audit --audit-level=moderate` |
 
