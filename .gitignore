@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 # Agent harness — local, not shared (role defs and .agents/skills symlink ARE tracked)
 .claude/settings.local.json
 .agents/.maintenance-stamp
+
+# next-tasks --tree isolated worktrees
+.worktrees/
