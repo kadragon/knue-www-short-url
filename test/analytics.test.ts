@@ -5,10 +5,10 @@ import { ANALYTICS } from '../src/constants';
 describe('analytics', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: { hostname: 'knue.url.kr', pathname: '/' },
-    });
+    // stubGlobal (not Object.defineProperty) so unstubAllGlobals restores the
+    // real window.location afterwards — avoids leaking a stale value to other
+    // tests in the file/run.
+    vi.stubGlobal('location', { hostname: 'knue.url.kr', pathname: '/' });
   });
 
   afterEach(() => {
@@ -43,6 +43,18 @@ describe('analytics', () => {
     await Promise.resolve();
 
     expect(consoleSpy).toHaveBeenCalledWith('[Analytics]', expect.stringContaining('network down'));
+  });
+
+  it('should log a non-2xx Umami response instead of discarding it silently', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 400 }));
+
+    expect(() => trackRedirect('abc')).not.toThrow();
+    // Flush both the resolve (.then) and the thrown-error (.catch) microtasks.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(consoleSpy).toHaveBeenCalledWith('[Analytics]', expect.stringContaining('400'));
   });
 
   it('should do nothing when analytics is disabled', async () => {

@@ -38,7 +38,16 @@ export function trackRedirect(code: string): void {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       keepalive: true,
-    }).catch((err) => logError('Analytics', err));
+    })
+      .then((res) => {
+        // `fetch` only rejects on network failure; a resolved 4xx/5xx (e.g. a
+        // bad website ID or schema drift) would otherwise be discarded
+        // silently. Surface it through the same best-effort log path.
+        if (!res.ok) {
+          throw new Error(`Umami responded ${res.status}`);
+        }
+      })
+      .catch((err) => logError('Analytics', err));
   } catch (err) {
     logError('Analytics', err);
   }
