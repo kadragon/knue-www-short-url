@@ -1,7 +1,7 @@
 // GENERATED FROM SPEC-ui-handlers
 
 import { ERROR_MESSAGES } from './constants';
-import QRCode from 'qrcode';
+import { logError } from './errorLogger';
 
 /**
  * 단축 URL을 클립보드에 복사하고 사용자에게 피드백을 제공합니다.
@@ -33,7 +33,7 @@ export async function handleCopyToClipboard(url: string): Promise<void> {
     await navigator.clipboard.writeText(url);
     alert(ERROR_MESSAGES.CLIPBOARD_COPIED);
   } catch (error) {
-    console.error('Clipboard error:', error);
+    logError('Clipboard', error);
     alert(ERROR_MESSAGES.CLIPBOARD_COPY_FAILED);
   }
 }
@@ -42,7 +42,8 @@ export async function handleCopyToClipboard(url: string): Promise<void> {
  * 주어진 URL을 QR 코드로 인코딩하여 Canvas에 렌더링합니다.
  *
  * QR 코드 생성은 비동기 작업이므로 Promise를 반환합니다.
- * 생성 실패 시 console.error로 로깅하지만 Promise는 resolve되므로
+ * qrcode 라이브러리는 동적 import로 지연 로딩되어 별도 청크로 분리됩니다.
+ * 생성 실패 시 logError로 로깅하지만 Promise는 resolve되므로
  * UI를 차단하지 않습니다 (QR 코드는 선택사항이므로).
  *
  * @param canvas - QR 코드를 렌더링할 Canvas 요소
@@ -54,15 +55,20 @@ export async function handleCopyToClipboard(url: string): Promise<void> {
  * await handleGenerateQRCode(canvas, 'https://knue.url.kr/?abc123');
  * // Canvas에 QR 코드 렌더링 완료
  */
-export function handleGenerateQRCode(canvas: HTMLCanvasElement, url: string): Promise<void> {
-  return new Promise((resolve) => {
-    QRCode.toCanvas(canvas, url, { width: 300 }, (error: Error | null) => {
-      if (error) {
-        console.error(ERROR_MESSAGES.QR_CODE_ERROR, error);
-      }
-      resolve(); // 에러 여부와 관계없이 resolve
+export async function handleGenerateQRCode(canvas: HTMLCanvasElement, url: string): Promise<void> {
+  try {
+    const { default: QRCode } = await import('qrcode');
+    await new Promise<void>((resolve) => {
+      QRCode.toCanvas(canvas, url, { width: 300 }, (error: Error | null | undefined) => {
+        if (error) logError('QRCode', error);
+        resolve(); // 에러 여부와 관계없이 resolve
+      });
     });
-  });
+  } catch (error) {
+    // 동적 청크 로드 실패(네트워크/오래된 배포 등)도 삼켜서 always-resolve 계약을 유지.
+    // QR은 선택사항이므로 호출부(fire-and-forget)에 unhandled rejection을 전파하지 않는다.
+    logError('QRCode', error);
+  }
 }
 
 /**

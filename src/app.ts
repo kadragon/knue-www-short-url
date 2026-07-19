@@ -2,20 +2,19 @@ import { encodeURL, decodeURL } from './urlEncoder';
 import { ERROR_MESSAGES, VALIDATION } from './constants';
 import { validateDecodeCode, validateEncodeParams, validateParameterRange } from './validators';
 import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
+import { logError } from './errorLogger';
 
 // Global error handling and monitoring
 window.addEventListener('error', (event: ErrorEvent) => {
-  console.error('Global error:', {
-    message: event.error?.message,
+  logError('GlobalError', event.error, {
     filename: event.filename,
     lineno: event.lineno,
     colno: event.colno,
-    stack: event.error?.stack,
   });
 });
 
 window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  logError('UnhandledRejection', event.reason);
 });
 
 /**
