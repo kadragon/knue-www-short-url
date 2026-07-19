@@ -3,10 +3,6 @@
 활성 스프린트는 [`tasks.md`](tasks.md), 기능 사양은 [`docs/`](docs/README.md) 참조.
 항목 상태: `- [ ]` 큐 · `- [>]` 진행 중(스프린트 승격) · `- [x]` 완료.
 
-## Now (착수 준비됨)
-
-- [ ] GH-002: GitHub Pages 배포 자동화 — Actions에서 `dist` 배포, Pages 설정, 도메인 설정. Effort S. (결정 필요: 기본 vs 커스텀 도메인 — 미해결 질문 1)
-
 ## Enhancements
 
 - [ ] 에러 처리 개선 — 현재 `console.error`만 사용. Sentry 등 모니터링 연동 검토. Effort M. (결정 필요: 미해결 질문 2)
@@ -23,7 +19,7 @@
 
 ## 미해결 질문 / 의사결정
 
-1. **GitHub Pages 배포**: 기본 도메인 vs 커스텀 도메인?
+1. ~~**GitHub Pages 배포**: 기본 도메인 vs 커스텀 도메인?~~ — 해결(2026-07-19): GH Pages 미사용. 프로덕션은 KNUE 서버 `www.knue.ac.kr/s/`, CI가 `dist-build` 아티팩트 자동 빌드(`base:'./'`), `/s/` 배포는 수동.
 2. **모니터링**: Sentry 연동 vs 로컬 로깅 유지?
 3. **다국어**: 필수인가? i18n 라이브러리 선택?
 4. **통계 데이터**: 서버 저장 vs 클라이언트 로컬스토리지?

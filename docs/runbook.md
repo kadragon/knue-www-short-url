@@ -24,7 +24,12 @@ Runtime: Bun. Build: Vite. Test: Vitest. No server — the build output is stati
 
 - **Lockfile drift** — Bun and npm lockfiles both exist. `docs/ci/dependency-alignment.md` (`SPEC-CI-DEPS-001`) covers keeping Vitest/coverage versions aligned so `--frozen-lockfile` installs succeed.
 - **Coverage gate fails** — add tests for the new branch/function; do not lower the thresholds in `vite.config.ts` to pass.
-- **Deploy** — output is `dist/`; deployment is static-file hosting (GitHub Pages automation is a queued backlog item).
+## Deploy
+
+Production serves the app at `www.knue.ac.kr/s/` (KNUE web server), so short URLs read `www.knue.ac.kr/s/?<code>`. That path is hosted by KNUE, not GitHub Pages.
+
+- **Build artifact (automated)** — CI (`quality-checks` job) builds and uploads `dist` as the `dist-build` artifact on every push/PR to `main`/`develop`. `vite.config.ts` sets `base: "./"` so the artifact is path-portable — the same `dist` works under `/s/` (or any subpath) without asset 404s.
+- **Publish (manual)** — download the `dist-build` artifact from the CI run and copy its contents into the KNUE server's `/s/` directory. No automated `/s/` deploy (the target host is outside this repo's control).
 
 ## Scratchpad convention
 
