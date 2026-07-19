@@ -39,3 +39,15 @@ export const VALIDATION = {
   MIN_NUMERIC_VALUE: 0,
   KNUE_DOMAIN: 'https://www.knue.ac.kr/',
 } as const;
+
+/**
+ * Inbound (decode-mode) redirect tracking via Umami Cloud.
+ *
+ * Best-effort, PII-free: only the short code is sent, no client-side
+ * timestamp (Umami records server-side). See analytics.ts.
+ */
+export const ANALYTICS = {
+  ENABLED: true,
+  ENDPOINT: 'https://cloud.umami.is/api/send',
+  WEBSITE_ID: 'a365996d-4929-412a-8624-9fa0ad9a912d',
+} as const;

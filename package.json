@@ -1,6 +1,6 @@
 {
   "name": "knue-www-short-url",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "한국교원대학교 게시판용 단축 URL 생성기",
   "main": "src/urlEncoder.ts",
   "scripts": {
