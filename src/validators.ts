@@ -59,9 +59,9 @@ interface ValidationResult {
  *
  * @example
  * validateDecodeCode('abc123');      // { valid: true }
- * validateDecodeCode('');            // { valid: false, error: localized invalid-address message }
- * validateDecodeCode(null);          // { valid: false, error: localized invalid-address message }
- * validateDecodeCode('a'.repeat(51)); // { valid: false, error: localized code-length message }
+ * validateDecodeCode('');            // { valid: false, error: 'Invalid address.' }
+ * validateDecodeCode(null);          // { valid: false, error: 'Invalid address.' }
+ * validateDecodeCode('a'.repeat(51)); // { valid: false, error: 'Error: Code is too long.' }
  */
 export function validateDecodeCode(code: unknown): ValidationResult {
   if (!code || typeof code !== 'string') {
@@ -96,7 +96,7 @@ interface EncodeParams {
  *
  * @example
  * validateEncodeParams({ site: '', key: 1, bbsNo: 2, nttNo: 3 });
- * // { valid: false, error: localized missing-parameters message }
+ * // { valid: false, error: 'Error: Required parameters are missing or invalid.' }
  */
 export function validateEncodeParams(params: EncodeParams): ValidationResult {
   const { site, key, bbsNo, nttNo } = params;
@@ -122,7 +122,7 @@ export function validateEncodeParams(params: EncodeParams): ValidationResult {
  *
  * @example
  * validateParameterRange({ key: 9999999999, bbsNo: 2, nttNo: 3 });
- * // { valid: false, error: localized out-of-range message }
+ * // { valid: false, error: 'Error: Parameter value is out of the valid range.' }
  */
 export function validateParameterRange(params: {
   key: number;

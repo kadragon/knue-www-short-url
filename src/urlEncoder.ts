@@ -1,7 +1,7 @@
 import Sqids from 'sqids';
 import { siteMap, siteMapReverse } from './knueSites';
 import { t } from './i18n';
-import { areAllValidNumbers } from './validators';
+import { isValidNumber } from './validators';
 
 /**
  * Sqids instance configured to optimize generated short codes.
@@ -113,7 +113,7 @@ interface EncodeResult {
  * @example
  * // Failure case - unsupported site
  * const result = encodeURL({ site: "invalid", key: 123, bbsNo: 456, nttNo: 789 });
- * // result: { error: localized unsupported-site message }
+ * // result: { error: "Unsupported site: invalid" }
  */
 export function encodeURL(
   { site, key, bbsNo, nttNo, expDays }: EncodeParams,
@@ -123,19 +123,17 @@ export function encodeURL(
   if (!siteNum) {
     return { error: t('UNSUPPORTED_SITE', site) };
   }
-  const numericValues = [key, bbsNo, nttNo];
-  if (!areAllValidNumbers(...numericValues)) {
+  if (!isValidNumber(key) || !isValidNumber(bbsNo) || !isValidNumber(nttNo)) {
     return { error: t('INVALID_NUMERIC_PARAMS') };
   }
-  const [numericKey, numericBbsNo, numericNttNo] = numericValues as [number, number, number];
 
   if (expDays === undefined) {
-    return { code: sqids.encode([siteNum, numericKey, numericBbsNo, numericNttNo]) };
+    return { code: sqids.encode([siteNum, key, bbsNo, nttNo]) };
   }
 
   const expiryEpochDay = toKstEpochDay(now) + expDays;
   return {
-    code: sqids.encode([siteNum, numericKey, numericBbsNo, numericNttNo, expiryEpochDay]),
+    code: sqids.encode([siteNum, key, bbsNo, nttNo, expiryEpochDay]),
     expiryEpochDay,
   };
 }
@@ -167,12 +165,12 @@ interface DecodeResult {
  * @example
  * // Failure case - invalid code
  * decodeURL("invalid")
- * // Returns: {error: localized invalid-code message}
+ * // Returns: {error: "Invalid code."}
  *
  * @example
  * // Failure case - expired code
  * decodeURL("expiredCode")
- * // Returns: {error: localized expired-code message}
+ * // Returns: {error: "This code has expired."}
  *
  * @security Returned URLs are always restricted to the https://www.knue.ac.kr/ domain.
  */

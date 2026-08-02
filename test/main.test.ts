@@ -1,13 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  afterAll,
-  vi,
-  type MockedFunction,
-} from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import {
   validateDecodeCode,
   validateEncodeParams,
@@ -16,7 +7,6 @@ import {
   parseExpiryDaysParam,
   isValidNumber,
 } from '../src/validators';
-import type { QRCodeRenderersOptions, QRCodeSegment } from 'qrcode';
 import { setLocale } from '../src/i18n';
 
 // Node 26+ ships an experimental global `localStorage` (gated behind
@@ -310,14 +300,7 @@ import QRCode from 'qrcode';
 // Type the mocked functions
 const mockedEncodeURL = vi.mocked(encodeURL);
 const mockedDecodeURL = vi.mocked(decodeURL);
-const mockedQRCodeToCanvas = QRCode.toCanvas as unknown as MockedFunction<
-  (
-    canvas: HTMLCanvasElement,
-    text: string | QRCodeSegment[],
-    options: QRCodeRenderersOptions,
-    callback: (error: Error | null | undefined) => void
-  ) => void
->;
+const mockedQRCodeToCanvas = vi.mocked(QRCode.toCanvas);
 
 // Import app.ts AFTER mocks are set up
 import '../src/app';
@@ -327,7 +310,11 @@ import '../src/app';
 // invokes it fire-and-forget, so QR assertions must wait a tick.
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 const runOnload = (): void => {
-  window.onload?.(new Event('load'));
+  const handler = window.onload;
+  if (!handler) {
+    throw new Error('window.onload was not registered by app.ts');
+  }
+  handler.call(window, new Event('load'));
 };
 
 describe('main.ts Logic', () => {
@@ -638,19 +625,9 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
-      mockedQRCodeToCanvas.mockImplementation(
-        (
-          canvas: HTMLCanvasElement,
-          url: string | QRCodeSegment[],
-          options: QRCodeRenderersOptions,
-          callback: (error: Error | null | undefined) => void
-        ) => {
-          void canvas;
-          void url;
-          void options;
-          callback(new Error('QR code generation failed'));
-        }
-      );
+      mockedQRCodeToCanvas.mockImplementation((_canvas, _url, _options, callback) => {
+        callback(new Error('QR code generation failed'));
+      });
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 

@@ -16,12 +16,12 @@ import { t } from './i18n';
  * @example
  * // Success case
  * await handleCopyToClipboard('https://knue.url.kr/?abc123');
- * // With navigator.clipboard support: alert(<localized copied-message>).
+ * // With navigator.clipboard support: alert('Copied to clipboard.').
  *
  * @example
  * // Clipboard API unavailable
  * await handleCopyToClipboard('https://knue.url.kr/?abc123');
- * // alert(<localized clipboard-unsupported message>).
+ * // alert('Automatic copy is not supported in this environment. Please copy manually.').
  */
 export async function handleCopyToClipboard(url: string): Promise<void> {
   try {

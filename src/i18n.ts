@@ -77,8 +77,8 @@ type MessageEntry = string | ((...args: string[]) => string);
  * Calls function values with the supplied arguments and returns string values as-is.
  *
  * @example
- * t('INVALID_CODE');                    // localized invalid-address message
- * t('UNSUPPORTED_SITE', 'invalid');     // localized unsupported-site message
+ * t('INVALID_CODE');                    // 'Invalid address.' for the English locale
+ * t('UNSUPPORTED_SITE', 'invalid');     // 'Unsupported site: invalid' for English
  */
 export function t(key: keyof typeof ERROR_MESSAGES, ...args: string[]): string {
   const entry = ERROR_MESSAGES[key][currentLocale] as MessageEntry;
