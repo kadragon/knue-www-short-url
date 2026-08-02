@@ -142,3 +142,98 @@ export function validateParameterRange(params: {
 
   return { valid: true };
 }
+
+/**
+ * Validates the optional expiry-days value (`expDays`) used by encode mode.
+ *
+ * Only an absent value (undefined/null/''/NaN) means "no expiry" and is treated
+ * as valid — NaN is included because that is what `parseInt` yields for a
+ * missing query parameter. Anything else must be an integer within
+ * VALIDATION.MIN_EXPIRY_DAYS..MAX_EXPIRY_DAYS; non-numeric or non-finite values
+ * such as the string '30' or Infinity are rejected rather than silently
+ * degrading to "no expiry".
+ *
+ * @param expDays - expiry days to validate (absent means no expiry)
+ * @returns validation result
+ *
+ * @example
+ * validateExpiryDays(undefined);  // { valid: true }
+ * validateExpiryDays(NaN);        // { valid: true }
+ * validateExpiryDays(30);         // { valid: true }
+ * validateExpiryDays(0);          // { valid: false, error: '...' }
+ * validateExpiryDays(3.5);        // { valid: false, error: '...' }
+ * validateExpiryDays(99999);      // { valid: false, error: '...' }
+ * validateExpiryDays('30');       // { valid: false, error: '...' }
+ * validateExpiryDays(Infinity);   // { valid: false, error: '...' }
+ */
+export function validateExpiryDays(expDays: unknown): ValidationResult {
+  const isAbsent =
+    expDays === undefined ||
+    expDays === null ||
+    expDays === '' ||
+    (typeof expDays === 'number' && isNaN(expDays));
+
+  if (isAbsent) {
+    return { valid: true };
+  }
+
+  const isOutOfRange =
+    !isValidNumber(expDays) ||
+    !Number.isInteger(expDays) ||
+    expDays < VALIDATION.MIN_EXPIRY_DAYS ||
+    expDays > VALIDATION.MAX_EXPIRY_DAYS;
+
+  if (isOutOfRange) {
+    return { valid: false, error: t('INVALID_EXPIRY_RANGE') };
+  }
+
+  return { valid: true };
+}
+
+interface ExpiryDaysParamResult extends ValidationResult {
+  /** Parsed integer day count — set only when the value was present and valid. */
+  days?: number;
+}
+
+/**
+ * Strictly parses and validates the raw `expDays` query-string parameter.
+ *
+ * Unlike `parseInt`, anything that is not digits-only (after trimming) is
+ * rejected instead of silently coerced: `'30abc'`, `'3.5'` and `'foo'` would
+ * otherwise become 30, 3 and NaN. The NaN case is the dangerous one — treating
+ * a malformed value the same as an absent one would quietly issue a permanent
+ * link to someone who asked for a temporary one.
+ *
+ * An absent parameter, or one that is empty after trimming, still means
+ * "no expiry" and stays valid. Only a present-but-malformed value is rejected.
+ *
+ * @param raw - raw string value of the `expDays` query parameter (undefined if absent)
+ * @returns validation result; `days` is set only when a valid value was present.
+ *
+ * @example
+ * parseExpiryDaysParam(undefined); // { valid: true }
+ * parseExpiryDaysParam('');        // { valid: true }
+ * parseExpiryDaysParam('30');      // { valid: true, days: 30 }
+ * parseExpiryDaysParam('foo');     // { valid: false, error: '...' }
+ * parseExpiryDaysParam('30abc');   // { valid: false, error: '...' }
+ * parseExpiryDaysParam('3.5');     // { valid: false, error: '...' }
+ */
+export function parseExpiryDaysParam(raw: string | undefined): ExpiryDaysParamResult {
+  const trimmed = raw?.trim();
+
+  if (!trimmed) {
+    return { valid: true };
+  }
+
+  if (!/^\d+$/.test(trimmed)) {
+    return { valid: false, error: t('INVALID_EXPIRY_RANGE') };
+  }
+
+  const days = Number(trimmed);
+  const rangeCheck = validateExpiryDays(days);
+  if (!rangeCheck.valid) {
+    return rangeCheck;
+  }
+
+  return { valid: true, days };
+}

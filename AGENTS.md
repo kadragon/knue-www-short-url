@@ -18,7 +18,7 @@ KNUE bulletin-board URL shortener. Client-side, Sqids-based encode/decode + QR g
 
 Mechanically enforced invariants. Violations block commit/CI.
 
-1. **Domain whitelist** — decoded/redirect URLs must start with `https://www.knue.ac.kr/`. Open-redirect guard, enforced at `app.ts:61` + tests.
+1. **Domain whitelist** — decoded/redirect URLs must start with `https://www.knue.ac.kr/`. Open-redirect guard, enforced at `src/app.ts:85` + tests.
 2. **Coverage gate** — lines/functions/statements ≥80, branches ≥70. Thresholds in `vite.config.ts` enforced by CI and pre-commit.
 3. **Lint/format clean** — `bun run lint` and `prettier --check` pass. Enforced by `lefthook.yml` pre-commit + CI.
 4. **Agent Integrity** — never state a value (port, endpoint, schema field, version …) as fact unless read directly from a file/command/tool result this session. Otherwise write `[unknown — read {source} to verify]`.

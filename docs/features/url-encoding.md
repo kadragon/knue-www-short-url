@@ -41,6 +41,17 @@
   THEN 동일한 코드 반환
   ```
 
+- **AC-5**: 선택적 `expDays`를 주면 만료일(KST epoch day)을 포함한 5-요소 코드를 생성
+  ```gherkin
+  GIVEN site="www", key=123, bbsNo=456, nttNo=789, expDays=30
+  WHEN encodeURL() 호출
+  THEN {code, expiryEpochDay} 반환. expiryEpochDay = toKstEpochDay(now) + expDays
+  ```
+  `expDays`를 생략하면 기존과 동일하게 4-요소(만료 없음) 코드를 생성하므로,
+  발급된 기존 단축 코드는 하위호환이 유지된다. 만료일 경계는 열람자의
+  로컬 타임존이 아닌 Asia/Seoul(KST, 고정 +9시간)에 고정된다 — 코드는
+  여러 수신자에게 공유되므로 날짜 경계가 모든 수신자에게 동일해야 한다.
+
 ---
 
 ## Examples (Tabular)
@@ -60,25 +71,33 @@
 **Module**: `src/js/urlEncoder.js` — **Export**: `encodeURL` (named export)
 
 ```typescript
-function encodeURL(param: {
-  site: string;
-  key: number;
-  bbsNo: number;
-  nttNo: number;
-}): { code?: string; error?: string }
+function encodeURL(
+  param: {
+    site: string;
+    key: number;
+    bbsNo: number;
+    nttNo: number;
+    expDays?: number; // 만료까지 남은 일수(1~3650). 생략 시 만료 없음(4-요소 코드).
+  },
+  now?: number // epoch ms, 테스트용 시계 고정 인자. 기본값 Date.now()
+): { code?: string; error?: string; expiryEpochDay?: number }
 ```
 
 **Parameters**:
 - `site` (string): 사이트명 (siteMap.js에 정의된 값)
 - `key` / `bbsNo` / `nttNo` (number): 0 이상의 정수
+- `expDays` (number, optional): 만료까지 남은 일수 (1~3650). 생략 시 만료 없는
+  레거시 4-요소 코드를 생성
 
 **Returns**:
-- Success: `{code: string}` - 3자 이상의 단축 코드
+- Success: `{code: string}` - 3자 이상의 단축 코드. `expDays`를 준 경우
+  `expiryEpochDay`(KST epoch day)도 함께 반환
 - Failure: `{error: string}` - 한글 오류 메시지
 
 **Errors**:
 - `"지원하지 않는 사이트입니다: {site}"` - 유효하지 않은 사이트
 - `"key, bbsNo, nttNo는 반드시 숫자여야 합니다."` - 숫자 파라미터 검증 실패
+- `"오류: 유효기간은 1일에서 3650일 사이여야 합니다."` - `expDays`가 1~3650 범위를 벗어남 (validators.ts에서 검증)
 
 ### Input Validation
 
@@ -88,6 +107,7 @@ function encodeURL(param: {
 | key | number | 0 | 999999999 | yes | 정수만 |
 | bbsNo | number | 0 | 999999999 | yes | 정수만 |
 | nttNo | number | 0 | 999999999 | yes | 정수만 |
+| expDays | number | 1 | 3650 | no | 생략 시 만료 없음 |
 
 ### Error Contract
 

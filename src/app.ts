@@ -1,6 +1,11 @@
-import { encodeURL, decodeURL } from './urlEncoder';
+import { encodeURL, decodeURL, kstEpochDayToDate } from './urlEncoder';
 import { VALIDATION } from './constants';
-import { validateDecodeCode, validateEncodeParams, validateParameterRange } from './validators';
+import {
+  validateDecodeCode,
+  validateEncodeParams,
+  validateParameterRange,
+  parseExpiryDaysParam,
+} from './validators';
 import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
 import { logError } from './errorLogger';
 import { t, initLocale, setLocale, getLocale } from './i18n';
@@ -79,7 +84,9 @@ function render(): void {
       trackRedirect(code);
       window.location.href = decodeResult.url;
     } else {
-      alert(t('INVALID_CODE'));
+      // Surface the specific decode error (e.g. expired code) when present,
+      // falling back to the generic invalid-code message otherwise.
+      alert(decodeResult.error ?? t('INVALID_CODE'));
       // See above: stay on the app root for sub-path deployments.
       window.location.href = window.location.pathname;
     }
@@ -119,8 +126,23 @@ function render(): void {
       return;
     }
 
+    // Expiry validation: an absent parameter is valid (no expiry); a present one
+    // must be a digits-only string in the 1..3650 range ('30abc', '3.5' are rejected).
+    const expiryValidation = parseExpiryDaysParam(params.expDays);
+    if (!expiryValidation.valid) {
+      resultDiv.innerText = expiryValidation.error ?? '';
+      return;
+    }
+    const expDays = expiryValidation.days;
+
     // 파라미터를 Sqids로 인코딩하여 단축 코드 생성 (urlEncoder.ts 사용)
-    const result = encodeURL({ site, key, bbsNo, nttNo });
+    const result = encodeURL({
+      site,
+      key,
+      bbsNo,
+      nttNo,
+      expDays,
+    });
 
     // 인코딩 성공 시: 단축 URL 생성 및 QR 코드 렌더링
     if (result.code) {
@@ -134,6 +156,20 @@ function render(): void {
       // 사용자 표시용: 프로토콜 제거 (knue.url.kr/?abc123로 표시)
       link.textContent = shortUrl.replace(/^https?:\/\//, '');
       resultDiv.appendChild(link);
+
+      // When an expiry is set, show it under the short URL. Render the very
+      // expiryEpochDay encodeURL encoded rather than recomputing it from a
+      // second Date.now() — near midnight the two clock reads could disagree
+      // and the label would name a different day than the code carries.
+      if (result.expiryEpochDay !== undefined) {
+        const expiryDate = kstEpochDayToDate(result.expiryEpochDay);
+        const expiryDiv = document.createElement('div');
+        expiryDiv.textContent = t(
+          'EXPIRES_ON',
+          expiryDate.toLocaleDateString(getLocale(), { timeZone: 'Asia/Seoul' })
+        );
+        resultDiv.appendChild(expiryDiv);
+      }
 
       // 클립보드 복사 안내 텍스트 표시
       copyInfoDiv.textContent = t('COPY_INFO');
