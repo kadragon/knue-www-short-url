@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, resolve } from 'node:path';
 
 // Guards the SEO meta/OG/Twitter tags in index.html against regression.
 // Crawlers don't run JS, so these must live in the static HTML head.
@@ -35,6 +35,22 @@ describe('SEO meta tags', () => {
     const image = metaByProp('og:image');
     expect(image).toMatch(/^https:\/\//);
     expect(image).toMatch(/og-image\.png$/);
+  });
+
+  it('ships the asset og:image points at', () => {
+    // The absolute og:image URL can't be resolved at test time, but vite copies
+    // public/ to the dist root — so the referenced basename must exist there, or
+    // the deployed card 404s while every other assertion here still passes.
+    const image = metaByProp('og:image') as string;
+    const assetName = basename(new URL(image).pathname);
+    expect(existsSync(resolve(process.cwd(), 'public', assetName))).toBe(true);
+  });
+
+  it('has alt text for the card image', () => {
+    // The card is Korean text baked into a raster, so it is inaccessible to
+    // screen readers without alt text on both the OG and Twitter tags.
+    expect(metaByProp('og:image:alt')).toBeTruthy();
+    expect(metaByName('twitter:image:alt')).toBeTruthy();
   });
 
   it('has a summary_large_image Twitter card', () => {
