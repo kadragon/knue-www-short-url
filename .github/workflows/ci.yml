@@ -35,6 +35,9 @@ jobs:
     - name: Lint code
       run: bun run lint
 
+    - name: Typecheck code
+      run: bun run typecheck
+
     - name: Run tests with coverage
       run: bun run test -- --coverage
 

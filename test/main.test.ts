@@ -16,7 +16,6 @@ import {
   parseExpiryDaysParam,
   isValidNumber,
 } from '../src/validators';
-import type { encodeURL as encodeURLType, decodeURL as decodeURLType } from '../src/urlEncoder';
 import type { QRCodeRenderersOptions, QRCodeSegment } from 'qrcode';
 import { setLocale } from '../src/i18n';
 
@@ -309,14 +308,14 @@ import { encodeURL, decodeURL } from '../src/urlEncoder';
 import QRCode from 'qrcode';
 
 // Type the mocked functions
-const mockedEncodeURL = encodeURL as MockedFunction<encodeURLType>;
-const mockedDecodeURL = decodeURL as MockedFunction<decodeURLType>;
-const mockedQRCodeToCanvas = QRCode.toCanvas as MockedFunction<
+const mockedEncodeURL = vi.mocked(encodeURL);
+const mockedDecodeURL = vi.mocked(decodeURL);
+const mockedQRCodeToCanvas = QRCode.toCanvas as unknown as MockedFunction<
   (
-    canvas: HTMLCanvasElement | string,
+    canvas: HTMLCanvasElement,
     text: string | QRCodeSegment[],
-    options?: QRCodeRenderersOptions,
-    callback?: (error: Error | null | undefined) => void
+    options: QRCodeRenderersOptions,
+    callback: (error: Error | null | undefined) => void
   ) => void
 >;
 
@@ -327,6 +326,9 @@ import '../src/app';
 // dynamic `import('qrcode')` before calling `toCanvas`, and `window.onload`
 // invokes it fire-and-forget, so QR assertions must wait a tick.
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
+const runOnload = (): void => {
+  window.onload?.(new Event('load'));
+};
 
 describe('main.ts Logic', () => {
   let originalLocation: Location;
@@ -385,7 +387,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?validCode';
       mockedDecodeURL.mockReturnValue({ url: 'https://www.knue.ac.kr/decoded' });
 
-      window.onload();
+      runOnload();
 
       expect(mockedDecodeURL).toHaveBeenCalledWith('validCode');
       expect(window.location.href).toBe('https://www.knue.ac.kr/decoded');
@@ -397,7 +399,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?invalidCode';
       mockedDecodeURL.mockReturnValue({ error: 'Invalid code' });
 
-      window.onload();
+      runOnload();
 
       // decodeResult.error is surfaced verbatim (e.g. so an expired code
       // shows the expiry message rather than the generic invalid-code one).
@@ -410,10 +412,22 @@ describe('main.ts Logic', () => {
       window.location.search = '?invalidCode';
       mockedDecodeURL.mockReturnValue({});
 
-      window.onload();
+      runOnload();
 
       expect(window.alert).toHaveBeenCalledWith('잘못된 주소입니다.');
       expect(window.location.href).toBe('/');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should reject a truthy non-KNUE decoded URL and stay on the app pathname', () => {
+      window.location.pathname = '/s/';
+      window.location.search = '?nonKnueCode';
+      mockedDecodeURL.mockReturnValue({ url: 'https://evil.example/' });
+
+      runOnload();
+
+      expect(window.alert).toHaveBeenCalledWith('잘못된 주소입니다.');
+      expect(window.location.href).toBe('/s/');
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -423,7 +437,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?invalidCode';
       mockedDecodeURL.mockReturnValue({ error: 'Invalid code' });
 
-      window.onload();
+      runOnload();
 
       expect(window.location.href).toBe('/s/');
       expect(fetch).not.toHaveBeenCalled();
@@ -433,7 +447,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?expiredCode';
       mockedDecodeURL.mockReturnValue({ error: '만료된 코드입니다.' });
 
-      window.onload();
+      runOnload();
 
       expect(window.alert).toHaveBeenCalledWith('만료된 코드입니다.');
       expect(window.location.href).toBe('/');
@@ -446,7 +460,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
-      window.onload();
+      runOnload();
       await flushPromises(); // wait for the lazily imported qrcode module
 
       const resultDiv = document.getElementById('result');
@@ -472,7 +486,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=invalid&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ error: 'Invalid site' });
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: Invalid site');
@@ -482,7 +496,7 @@ describe('main.ts Logic', () => {
     it('should display an error when required parameters are missing', () => {
       window.location.search = '?site=www&key=1&bbsNo=2';
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: 필수 파라미터가 누락되었거나 잘못되었습니다.');
@@ -492,7 +506,7 @@ describe('main.ts Logic', () => {
     it('should display an error when parameters are out of valid range', () => {
       window.location.search = '?site=www&key=9999999999&bbsNo=2&nttNo=3';
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: 파라미터 값이 유효 범위를 벗어났습니다.');
@@ -503,7 +517,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=30';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode', expiryEpochDay: 20500 });
 
-      window.onload();
+      runOnload();
       await flushPromises();
 
       expect(mockedEncodeURL).toHaveBeenCalledWith({
@@ -524,7 +538,7 @@ describe('main.ts Logic', () => {
       const expiryEpochDay = Math.floor(Date.UTC(2026, 5, 15) / 86_400_000);
       mockedEncodeURL.mockReturnValue({ code: 'shortCode', expiryEpochDay });
 
-      window.onload();
+      runOnload();
       await flushPromises();
 
       const resultDiv = document.getElementById('result');
@@ -536,7 +550,7 @@ describe('main.ts Logic', () => {
     it('should display an error when expDays is out of the valid range', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=99999';
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
@@ -546,7 +560,7 @@ describe('main.ts Logic', () => {
     it('should reject a malformed expDays instead of silently issuing a permanent link', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=foo';
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
@@ -566,7 +580,7 @@ describe('main.ts Logic', () => {
         writable: true,
       });
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       const link = resultDiv?.querySelector('a') as HTMLElement;
@@ -589,7 +603,7 @@ describe('main.ts Logic', () => {
         writable: true,
       });
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       const link = resultDiv?.querySelector('a') as HTMLElement;
@@ -608,7 +622,7 @@ describe('main.ts Logic', () => {
         writable: true,
       });
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       const link = resultDiv?.querySelector('a') as HTMLElement;
@@ -627,17 +641,20 @@ describe('main.ts Logic', () => {
       mockedQRCodeToCanvas.mockImplementation(
         (
           canvas: HTMLCanvasElement,
-          url: string,
-          options: object,
-          callback: (error: Error | null) => void
+          url: string | QRCodeSegment[],
+          options: QRCodeRenderersOptions,
+          callback: (error: Error | null | undefined) => void
         ) => {
+          void canvas;
+          void url;
+          void options;
           callback(new Error('QR code generation failed'));
         }
       );
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      window.onload();
+      runOnload();
       await flushPromises(); // wait for the lazily imported qrcode module
 
       // Failure path now logs via the central structured logError('QRCode', ...).
@@ -653,7 +670,7 @@ describe('main.ts Logic', () => {
   describe('Default Mode', () => {
     it('should display the default message when no query string is present', () => {
       window.location.search = '';
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('KNUE 단축 URL 생성기');
@@ -669,7 +686,7 @@ describe('main.ts Logic', () => {
       setLocale('en');
       window.location.search = '';
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('KNUE Short URL Generator');
@@ -681,7 +698,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ error: 'Invalid site' });
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('Error: Invalid site');
@@ -689,7 +706,7 @@ describe('main.ts Logic', () => {
 
     it('should flip visible strings ko -> en -> ko when the locale toggle is clicked', () => {
       window.location.search = '';
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       const toggle = document.getElementById('locale-toggle') as HTMLButtonElement;
@@ -712,7 +729,7 @@ describe('main.ts Logic', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3';
       mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
 
-      window.onload();
+      runOnload();
 
       const resultDiv = document.getElementById('result');
       const toggle = document.getElementById('locale-toggle') as HTMLButtonElement;

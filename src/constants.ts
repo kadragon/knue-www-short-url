@@ -1,14 +1,14 @@
 // GENERATED FROM SPEC-error-messages
 
 /**
- * 애플리케이션 전체에서 사용되는 에러 메시지와 안내 메시지를 정의합니다.
+ * Defines error and guidance messages used throughout the application.
  *
- * 중앙 집중식 관리로 다음 이점을 제공합니다:
- * - 메시지 일관성: 같은 에러는 항상 같은 메시지
- * - 유지보수성: 한 곳에서 모든 메시지 수정 가능
+ * Centralized management provides:
+ * - Message consistency: the same error always uses the same message.
+ * - Maintainability: all messages can be changed in one place.
  * - i18n: each value is a `{ ko, en }` pair resolved at runtime via `t()`
  *   (see `src/i18n.ts`); string values or `(...) => string` function values.
- * - 타이핑 오류 방지: 문자열 리터럴 대신 상수 사용
+ * - Fewer typing errors: use constants instead of string literals.
  */
 export const ERROR_MESSAGES = {
   // Decode errors
@@ -75,9 +75,9 @@ export const ERROR_MESSAGES = {
 } as const;
 
 /**
- * 입력값 검증 및 제약 조건에 사용되는 상수들을 정의합니다.
+ * Defines constants used for input validation and constraints.
  *
- * 이 상수들은 validators.ts에서 참조되며, 모든 검증 로직의 임계값을 관리합니다.
+ * validators.ts references these values to centralize validation thresholds.
  */
 export const VALIDATION = {
   MAX_CODE_LENGTH: 50,

@@ -7,5 +7,7 @@ pre-commit:
     format-check:
       glob: "*.{ts,js}"
       run: bun run format:check
+    typecheck:
+      run: bun run typecheck
     test:
       run: bun run test --run

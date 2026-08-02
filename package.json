@@ -9,7 +9,8 @@
     "test": "vitest",
     "lint": "eslint src test",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\""
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "24.9.1",
     "@types/qrcode": "^1.5.6",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.0",
