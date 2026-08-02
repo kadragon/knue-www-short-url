@@ -142,3 +142,48 @@ export function validateParameterRange(params: {
 
   return { valid: true };
 }
+
+/**
+ * Encode 모드에서 선택적 만료일수(`expDays`)를 검증합니다.
+ *
+ * 값이 없는 경우(undefined/null/''/NaN)만 "만료 없음"을 의미하므로 유효한
+ * 것으로 간주합니다. 그 외의 값은 VALIDATION.MIN_EXPIRY_DAYS ~
+ * MAX_EXPIRY_DAYS 범위의 정수여야 하며, 문자열('30')이나 Infinity처럼
+ * 숫자가 아니거나 유한하지 않은 값은 모두 거부됩니다.
+ *
+ * @param expDays - 검증할 만료일수 (없으면 만료 없음)
+ * @returns 검증 결과 객체
+ *
+ * @example
+ * validateExpiryDays(undefined);  // { valid: true }
+ * validateExpiryDays(NaN);        // { valid: true }
+ * validateExpiryDays(30);         // { valid: true }
+ * validateExpiryDays(0);          // { valid: false, error: '...' }
+ * validateExpiryDays(3.5);        // { valid: false, error: '...' }
+ * validateExpiryDays(99999);      // { valid: false, error: '...' }
+ * validateExpiryDays('30');       // { valid: false, error: '...' }
+ * validateExpiryDays(Infinity);   // { valid: false, error: '...' }
+ */
+export function validateExpiryDays(expDays: unknown): ValidationResult {
+  const isAbsent =
+    expDays === undefined ||
+    expDays === null ||
+    expDays === '' ||
+    (typeof expDays === 'number' && isNaN(expDays));
+
+  if (isAbsent) {
+    return { valid: true };
+  }
+
+  const isOutOfRange =
+    !isValidNumber(expDays) ||
+    !Number.isInteger(expDays) ||
+    expDays < VALIDATION.MIN_EXPIRY_DAYS ||
+    expDays > VALIDATION.MAX_EXPIRY_DAYS;
+
+  if (isOutOfRange) {
+    return { valid: false, error: t('INVALID_EXPIRY_RANGE') };
+  }
+
+  return { valid: true };
+}

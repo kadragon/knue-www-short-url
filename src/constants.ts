@@ -40,6 +40,17 @@ export const ERROR_MESSAGES = {
     ko: 'key, bbsNo, nttNo는 반드시 숫자여야 합니다.',
     en: 'key, bbsNo, nttNo must be numbers.',
   },
+  INVALID_EXPIRY_RANGE: {
+    ko: '오류: 유효기간은 1일에서 3650일 사이여야 합니다.',
+    en: 'Error: Expiry must be between 1 and 3650 days.',
+  },
+
+  // Expiry-related messages
+  EXPIRED_CODE: { ko: '만료된 코드입니다.', en: 'This code has expired.' },
+  EXPIRES_ON: {
+    ko: (date: string) => `유효기간: ${date}까지`,
+    en: (date: string) => `Expires on: ${date}`,
+  },
 
   // Clipboard messages
   CLIPBOARD_COPIED: { ko: '클립보드에 복사되었습니다.', en: 'Copied to clipboard.' },
@@ -72,6 +83,8 @@ export const VALIDATION = {
   MAX_CODE_LENGTH: 50,
   MAX_NUMERIC_VALUE: 999999999,
   MIN_NUMERIC_VALUE: 0,
+  MIN_EXPIRY_DAYS: 1,
+  MAX_EXPIRY_DAYS: 3650,
   KNUE_DOMAIN: 'https://www.knue.ac.kr/',
 } as const;
 

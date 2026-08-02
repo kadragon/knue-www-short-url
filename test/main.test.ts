@@ -12,6 +12,7 @@ import {
   validateDecodeCode,
   validateEncodeParams,
   validateParameterRange,
+  validateExpiryDays,
   isValidNumber,
 } from '../src/validators';
 import type { encodeURL as encodeURLType, decodeURL as decodeURLType } from '../src/urlEncoder';
@@ -152,6 +153,68 @@ describe('Validators Module', () => {
     });
   });
 
+  describe('validateExpiryDays', () => {
+    it('should accept absent expDays as "no expiry"', () => {
+      const result = validateExpiryDays(undefined);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should accept NaN expDays as "no expiry" (parseInt of a missing query param)', () => {
+      const result = validateExpiryDays(NaN);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should accept the minimum boundary (1)', () => {
+      const result = validateExpiryDays(1);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should accept the maximum boundary (3650)', () => {
+      const result = validateExpiryDays(3650);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should reject 0 (below minimum)', () => {
+      const result = validateExpiryDays(0);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should reject a negative value', () => {
+      const result = validateExpiryDays(-1);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should reject a value above the maximum (3651)', () => {
+      const result = validateExpiryDays(3651);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should reject a non-integer value', () => {
+      const result = validateExpiryDays(3.5);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should reject a numeric string instead of coercing it', () => {
+      const result = validateExpiryDays('30');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should reject Infinity', () => {
+      const result = validateExpiryDays(Infinity);
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+  });
+
   describe('isValidNumber', () => {
     it('should return true for valid numbers', () => {
       expect(isValidNumber(123)).toBe(true);
@@ -278,9 +341,22 @@ describe('main.ts Logic', () => {
       expect(fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('should show an alert and redirect to home on failed decode', () => {
+    it('should show an alert and redirect to home on failed decode, surfacing the decode error', () => {
       window.location.search = '?invalidCode';
       mockedDecodeURL.mockReturnValue({ error: 'Invalid code' });
+
+      window.onload();
+
+      // decodeResult.error is surfaced verbatim (e.g. so an expired code
+      // shows the expiry message rather than the generic invalid-code one).
+      expect(window.alert).toHaveBeenCalledWith('Invalid code');
+      expect(window.location.href).toBe('/');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to the generic invalid-code message when decodeResult.error is absent', () => {
+      window.location.search = '?invalidCode';
+      mockedDecodeURL.mockReturnValue({});
 
       window.onload();
 
@@ -298,6 +374,17 @@ describe('main.ts Logic', () => {
       window.onload();
 
       expect(window.location.href).toBe('/s/');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should alert the expiry message and skip trackRedirect for an expired code', () => {
+      window.location.search = '?expiredCode';
+      mockedDecodeURL.mockReturnValue({ error: '만료된 코드입니다.' });
+
+      window.onload();
+
+      expect(window.alert).toHaveBeenCalledWith('만료된 코드입니다.');
+      expect(window.location.href).toBe('/');
       expect(fetch).not.toHaveBeenCalled();
     });
   });
@@ -357,6 +444,35 @@ describe('main.ts Logic', () => {
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: 파라미터 값이 유효 범위를 벗어났습니다.');
+      expect(QRCode.toCanvas).not.toHaveBeenCalled();
+    });
+
+    it('should render the expiry date under the short URL when expDays is set', async () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=30';
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
+
+      window.onload();
+      await flushPromises();
+
+      expect(mockedEncodeURL).toHaveBeenCalledWith({
+        site: 'www',
+        key: 1,
+        bbsNo: 2,
+        nttNo: 3,
+        expDays: 30,
+      });
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv?.textContent).toContain('유효기간:');
+    });
+
+    it('should display an error when expDays is out of the valid range', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=99999';
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv?.innerText).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
       expect(QRCode.toCanvas).not.toHaveBeenCalled();
     });
 

@@ -124,5 +124,26 @@ describe('i18n Module', () => {
       setLocale('en');
       expect(t('UNSUPPORTED_SITE', 'invalid')).toBe('Unsupported site: invalid');
     });
+
+    it('resolves the EXPIRED_CODE key in Korean and English', () => {
+      setLocale('ko');
+      expect(t('EXPIRED_CODE')).toBe('만료된 코드입니다.');
+      setLocale('en');
+      expect(t('EXPIRED_CODE')).toBe('This code has expired.');
+    });
+
+    it('resolves the INVALID_EXPIRY_RANGE key in Korean and English', () => {
+      setLocale('ko');
+      expect(t('INVALID_EXPIRY_RANGE')).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+      setLocale('en');
+      expect(t('INVALID_EXPIRY_RANGE')).toBe('Error: Expiry must be between 1 and 3650 days.');
+    });
+
+    it('resolves the EXPIRES_ON function key in Korean and English', () => {
+      setLocale('ko');
+      expect(t('EXPIRES_ON', '2026-01-01')).toBe('유효기간: 2026-01-01까지');
+      setLocale('en');
+      expect(t('EXPIRES_ON', '2026-01-01')).toBe('Expires on: 2026-01-01');
+    });
   });
 });

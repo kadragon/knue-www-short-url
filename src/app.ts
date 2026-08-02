@@ -1,10 +1,19 @@
 import { encodeURL, decodeURL } from './urlEncoder';
 import { VALIDATION } from './constants';
-import { validateDecodeCode, validateEncodeParams, validateParameterRange } from './validators';
+import {
+  validateDecodeCode,
+  validateEncodeParams,
+  validateParameterRange,
+  validateExpiryDays,
+  isValidNumber,
+} from './validators';
 import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
 import { logError } from './errorLogger';
 import { t, initLocale, setLocale, getLocale } from './i18n';
 import { trackRedirect } from './analytics';
+
+/** 하루(24시간)를 밀리초로 환산한 값. 만료일 표시 계산에 사용됩니다. */
+const MS_PER_DAY = 86_400_000;
 
 // Global error handling and monitoring
 window.addEventListener('error', (event: ErrorEvent) => {
@@ -79,7 +88,9 @@ function render(): void {
       trackRedirect(code);
       window.location.href = decodeResult.url;
     } else {
-      alert(t('INVALID_CODE'));
+      // Surface the specific decode error (e.g. expired code) when present,
+      // falling back to the generic invalid-code message otherwise.
+      alert(decodeResult.error ?? t('INVALID_CODE'));
       // See above: stay on the app root for sub-path deployments.
       window.location.href = window.location.pathname;
     }
@@ -102,6 +113,9 @@ function render(): void {
     const key = parseInt(params.key, 10);
     const bbsNo = parseInt(params.bbsNo, 10);
     const nttNo = parseInt(params.nttNo, 10);
+    // expDays는 선택 파라미터: 없으면 parseInt가 NaN을 반환하고,
+    // isValidNumber(NaN) === false이므로 validateExpiryDays가 "만료 없음"으로 처리.
+    const expDays = parseInt(params.expDays, 10);
 
     // 필수 파라미터 검증 (validators.ts 사용)
     // site 존재 여부, key/bbsNo/nttNo가 유효한 숫자인지 확인
@@ -119,8 +133,22 @@ function render(): void {
       return;
     }
 
+    // 유효기간 검증: 없으면 유효(만료 없음), 있으면 1~3650일 범위의 정수여야 함
+    const expiryValidation = validateExpiryDays(expDays);
+    if (!expiryValidation.valid) {
+      resultDiv.innerText = expiryValidation.error ?? '';
+      return;
+    }
+    const hasExpiry = isValidNumber(expDays);
+
     // 파라미터를 Sqids로 인코딩하여 단축 코드 생성 (urlEncoder.ts 사용)
-    const result = encodeURL({ site, key, bbsNo, nttNo });
+    const result = encodeURL({
+      site,
+      key,
+      bbsNo,
+      nttNo,
+      expDays: hasExpiry ? expDays : undefined,
+    });
 
     // 인코딩 성공 시: 단축 URL 생성 및 QR 코드 렌더링
     if (result.code) {
@@ -134,6 +162,15 @@ function render(): void {
       // 사용자 표시용: 프로토콜 제거 (knue.url.kr/?abc123로 표시)
       link.textContent = shortUrl.replace(/^https?:\/\//, '');
       resultDiv.appendChild(link);
+
+      // 유효기간이 설정된 경우, 단축 URL 아래에 만료일을 표시
+      if (hasExpiry) {
+        const expiryEpochDay = Math.floor(Date.now() / MS_PER_DAY) + expDays;
+        const expiryDate = new Date(expiryEpochDay * MS_PER_DAY);
+        const expiryDiv = document.createElement('div');
+        expiryDiv.textContent = t('EXPIRES_ON', expiryDate.toLocaleDateString(getLocale()));
+        resultDiv.appendChild(expiryDiv);
+      }
 
       // 클립보드 복사 안내 텍스트 표시
       copyInfoDiv.textContent = t('COPY_INFO');
