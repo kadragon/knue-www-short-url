@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Source for public/og-image.png (1200x630 OG card).
+
+    Authored on a 1200x1200 square canvas on purpose: the only rasterizer available
+    on the build machine is macOS `qlmanage -t`, which always emits a square canvas
+    and ignores a non-square SVG height. Keeping the source square makes the render
+    1:1, so a centered 630-tall crop lands exactly on the card band below.
+
+    Regenerate: see "OG image" in docs/runbook.md.
+  -->
+  <rect width="1200" height="1200" fill="#0b1f3a" />
+  <!-- Card band: y 285..915 is what the centered 630-tall crop keeps. -->
+  <rect x="0" y="285" width="1200" height="12" fill="#1e4d8b" />
+  <text x="80" y="500" font-family="-apple-system, 'Apple SD Gothic Neo', sans-serif" font-size="36" fill="#8fb4e3">한국교원대학교</text>
+  <text x="80" y="620" font-family="-apple-system, 'Apple SD Gothic Neo', sans-serif" font-size="88" font-weight="bold" fill="#ffffff">단축 URL 생성기</text>
+  <text x="80" y="710" font-family="-apple-system, 'Apple SD Gothic Neo', sans-serif" font-size="32" fill="#c3d6ef">긴 게시판 링크를 짧고 간편한 URL로 변환하세요</text>
+</svg>
