@@ -7,7 +7,7 @@ import { encodeURL, decodeURL, toKstEpochDay } from '../src/urlEncoder';
 const sqids = new Sqids({
   alphabet: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~',
   minLength: 3,
-  blocklist: ['admin', 'www', 'api'],
+  blocklist: new Set(['admin', 'www', 'api']),
 });
 
 describe('URL Encoding/Decoding', () => {

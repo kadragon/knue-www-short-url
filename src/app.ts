@@ -25,45 +25,45 @@ window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => 
 });
 
 /**
- * 애플리케이션 메인 로직 초기화 및 라우팅을 수행합니다.
+ * Initializes the main application logic and routes the current request.
  *
- * 3가지 모드로 동작합니다:
- * 1. Decode Mode: ?<code> → 원본 URL 디코딩 후 리다이렉트
- * 2. Encode Mode: ?site=...&key=...&bbsNo=...&nttNo=... → 단축 URL 생성 + QR 코드
- * 3. Default Mode: / → 기본 메시지 표시
+ * The application has three modes:
+ * 1. Decode mode: ?<code> -> decode the original URL and redirect.
+ * 2. Encode mode: ?site=...&key=...&bbsNo=...&nttNo=... -> create a short URL and QR code.
+ * 3. Default mode: / -> display the default message.
  *
- * URL 파라미터를 파싱하여 적절한 모드로 라우팅합니다.
- * 모든 입력값은 validators.ts의 함수로 검증합니다.
+ * Parses URL parameters and routes to the appropriate mode.
+ * All inputs are validated through functions in validators.ts.
  */
 function render(): void {
-  // 로케일에 따라 문서 제목과 로케일 토글 버튼 라벨을 갱신
+  // Update the document title and locale-toggle label for the active locale.
   document.title = t('APP_TITLE');
   const localeToggle = document.getElementById('locale-toggle') as HTMLButtonElement | null;
   if (localeToggle) {
     localeToggle.textContent = t('LOCALE_TOGGLE');
   }
 
-  // DOM 요소 참조 (페이지 로드 시 요소가 존재해야 함)
+  // Reference DOM elements that must exist when the page loads.
   const search = window.location.search;
   const resultDiv = document.getElementById('result') as HTMLDivElement;
   const qrCanvas = document.getElementById('qrCanvas') as HTMLCanvasElement;
   const copyInfoDiv = document.getElementById('copy-info') as HTMLDivElement;
 
-  // 재렌더(로케일 토글 등) 시 이전 결과가 누적되지 않도록 초기화.
-  // Encode-success 모드는 resultDiv에 <a>를 appendChild하므로, 초기화 없이
-  // 재렌더하면 링크가 중복 누적된다.
+  // Clear previous output before re-rendering (for example, after a locale toggle).
+  // Encode-success mode appends an <a> to resultDiv, so omitting this reset would
+  // accumulate duplicate links.
   resultDiv.replaceChildren();
 
   /**
    * MODE 1: Decode Mode
-   * 형식: ?<code> (예: ?XyZ123)
-   * 동작: 단축 코드를 원본 URL로 디코딩하여 리다이렉트
+   * Format: ?<code> (for example, ?XyZ123).
+   * Action: decode the short code to the original URL and redirect.
    */
   if (search && !search.includes('=')) {
-    // URL에서 '?' 제거하고 공백 정리
+    // Remove '?' from the URL and trim whitespace.
     const code = search.substring(1).trim();
 
-    // 코드 길이 및 형식 검증 (validators.ts 사용)
+    // Validate code length and format through validators.ts.
     const validation = validateDecodeCode(code);
     if (!validation.valid) {
       alert(validation.error);
@@ -73,11 +73,11 @@ function render(): void {
       return;
     }
 
-    // 코드를 원본 URL로 디코딩 (urlEncoder.ts 사용)
+    // Decode the code to the original URL through urlEncoder.ts.
     const decodeResult = decodeURL(code);
 
-    // 보안: 디코딩된 URL이 KNUE 도메인인지 검증 후 리다이렉트
-    // KNUE 도메인이 아니면 홈으로 리다이렉트 (도메인 하이재킹 방지)
+    // Security: validate the decoded URL belongs to the KNUE domain before redirecting.
+    // Redirect to the app root for other domains to prevent domain hijacking.
     if (decodeResult.url && decodeResult.url.startsWith(VALIDATION.KNUE_DOMAIN)) {
       // Best-effort inbound tracking: fire before navigation so the redirect
       // is still counted despite the immediate page unload.
@@ -95,31 +95,31 @@ function render(): void {
 
   /**
    * MODE 2: Encode Mode
-   * 형식: ?site=<site>&key=<key>&bbsNo=<bbsNo>&nttNo=<nttNo>
-   * 동작: URL 파라미터를 단축 코드로 인코딩하고 QR 코드 생성
+   * Format: ?site=<site>&key=<key>&bbsNo=<bbsNo>&nttNo=<nttNo>.
+   * Action: encode URL parameters into a short code and generate a QR code.
    */
   if (search && search.includes('=')) {
-    // URL 쿼리 문자열 파싱 (예: "?site=www&key=123" → {site: "www", key: "123"})
+    // Parse the URL query string (for example, "?site=www&key=123" -> {site: "www", key: "123"}).
     const searchParams = new URLSearchParams(search);
     const params = Object.fromEntries(searchParams.entries());
 
-    // 파라미터 추출 및 타입 변환 (문자열 → 숫자)
-    // parseInt(value, 10)은 10진법으로 파싱하고, 숫자가 아니면 NaN 반환
+    // Extract parameters and convert their types (strings -> numbers).
+    // parseInt(value, 10) parses base 10 and returns NaN for non-numeric input.
     const site = params.site?.trim();
     const key = parseInt(params.key, 10);
     const bbsNo = parseInt(params.bbsNo, 10);
     const nttNo = parseInt(params.nttNo, 10);
 
-    // 필수 파라미터 검증 (validators.ts 사용)
-    // site 존재 여부, key/bbsNo/nttNo가 유효한 숫자인지 확인
+    // Validate required parameters through validators.ts.
+    // Check that site exists and key/bbsNo/nttNo are valid numbers.
     const encodeParamsValidation = validateEncodeParams({ site, key, bbsNo, nttNo });
     if (!encodeParamsValidation.valid) {
       resultDiv.innerText = encodeParamsValidation.error ?? '';
       return;
     }
 
-    // 범위 검증: 모든 숫자가 0 ~ 999,999,999 범위 내인지 확인
-    // 너무 큰 숫자는 Sqids 인코딩 오류 및 보안 문제 야기 가능
+    // Validate the range: every number must be between 0 and 999,999,999.
+    // Excessively large numbers can cause Sqids encoding errors and security issues.
     const rangeValidation = validateParameterRange({ key, bbsNo, nttNo });
     if (!rangeValidation.valid) {
       resultDiv.innerText = rangeValidation.error ?? '';
@@ -135,7 +135,7 @@ function render(): void {
     }
     const expDays = expiryValidation.days;
 
-    // 파라미터를 Sqids로 인코딩하여 단축 코드 생성 (urlEncoder.ts 사용)
+    // Encode parameters with Sqids to create a short code through urlEncoder.ts.
     const result = encodeURL({
       site,
       key,
@@ -144,16 +144,16 @@ function render(): void {
       expDays,
     });
 
-    // 인코딩 성공 시: 단축 URL 생성 및 QR 코드 렌더링
+    // On successful encoding: build the short URL and render its QR code.
     if (result.code) {
-      // 짧은 URL 구성: 현재 도메인 + 짧은 코드
-      // 예: https://knue.url.kr/?abc123
+      // Build the short URL from the current origin and short code.
+      // Example: https://knue.url.kr/?abc123
       const shortUrl = `${window.location.origin}${window.location.pathname}?${result.code}`;
 
-      // 단축 URL을 표시할 <a> 요소 생성
+      // Create an <a> element to display the short URL.
       const link = document.createElement('a');
       link.href = shortUrl;
-      // 사용자 표시용: 프로토콜 제거 (knue.url.kr/?abc123로 표시)
+      // Remove the protocol for display (shown as knue.url.kr/?abc123).
       link.textContent = shortUrl.replace(/^https?:\/\//, '');
       resultDiv.appendChild(link);
 
@@ -171,35 +171,35 @@ function render(): void {
         resultDiv.appendChild(expiryDiv);
       }
 
-      // 클립보드 복사 안내 텍스트 표시
+      // Display the clipboard-copy guidance text.
       copyInfoDiv.textContent = t('COPY_INFO');
 
-      // 링크 클릭 시 클립보드에 복사하는 이벤트 핸들러 등록
+      // Register a click handler that copies the URL to the clipboard.
       link.addEventListener('click', createCopyClickHandler(shortUrl));
 
-      // QR 코드 생성 (Canvas에 렌더링, uiHandlers.ts 사용)
+      // Generate the QR code and render it on the Canvas through uiHandlers.ts.
       handleGenerateQRCode(qrCanvas, shortUrl);
     } else {
-      // 인코딩 실패 시: 에러 메시지 표시 (지원되지 않는 사이트 등)
+      // On encoding failure: display the error message (for example, an unsupported site).
       resultDiv.innerText = t('ERROR_PREFIX') + result.error;
     }
-    return; // Encode 모드 처리 완료
+    return; // Encode mode complete.
   }
 
   /**
    * MODE 3: Default Mode
-   * 형식: / (쿼리 문자열 없음)
-   * 동작: 기본 안내 메시지 표시
+   * Format: / (no query string).
+   * Action: display the default guidance message.
    */
   resultDiv.innerText = t('DEFAULT_MESSAGE');
 }
 
 /**
- * 로케일 토글 버튼에 클릭 이벤트를 연결합니다.
+ * Connects the click event for the locale-toggle button.
  *
- * `window.onload`에서 한 번만 호출되며, 버튼 클릭 시 로케일을 전환하고
- * `render()`를 다시 실행해 화면에 보이는 문자열을 갱신합니다.
- * (render()가 재실행될 때마다 다시 바인딩되지 않도록 render() 밖에서 호출)
+ * Called once from `window.onload`; a click switches the locale and reruns
+ * `render()` to update visible strings. It stays outside render() so repeated
+ * renders do not register duplicate handlers.
  */
 function wireLocaleToggle(): void {
   const localeToggle = document.getElementById('locale-toggle') as HTMLButtonElement | null;

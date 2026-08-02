@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- [done] Tech Debt (2026-08-02)
+
 - [done] Features: URL 유효기간 — `?expDays=N`으로 만료일을 short code(Sqids 5번째 원소, epoch day)에 인코딩, 만료 없는 기존 4원소 코드 하위호환 (2026-08-02)
 
 - [done] SEO 카드 접근성·회귀 보강: `twitter:image:alt` 추가, OG 이미지 에셋 존재 및 alt 텍스트 테스트 (2026-08-02)

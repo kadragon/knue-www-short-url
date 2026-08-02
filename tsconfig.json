@@ -22,6 +22,6 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
+  "include": ["src/**/*.ts", "test/**/*.test.ts"],
   "exclude": ["node_modules"]
 }
