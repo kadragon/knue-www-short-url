@@ -129,6 +129,17 @@ https://www.knue.ac.kr/s/?site=www&key=12345&bbsNo=678&nttNo=9012
 - QR 코드 자동 생성
 - 클릭하면 클립보드에 복사
 
+**선택 파라미터 — 유효기간(`expDays`):**
+
+```
+https://www.knue.ac.kr/s/?site=www&key=12345&bbsNo=678&nttNo=9012&expDays=30
+```
+
+- `expDays`: 발급 시점부터 만료까지 남은 일수 (1~3650 사이의 정수만 허용)
+- 생략하면 만료 없는 영구 링크가 생성됩니다
+- 만료일 경계는 Asia/Seoul(KST) 자정 기준으로 고정되며, 만료일 지난 코드는
+  디코딩 시 "만료된 코드입니다" 오류를 반환합니다
+
 ### 2. 디코딩 모드 (원본 URL로 리다이렉트)
 
 단축 코드를 원본 KNUE URL로 복원하여 자동 리다이렉트합니다.
@@ -148,7 +159,7 @@ https://www.knue.ac.kr/s/?AbC123
 **동작:**
 
 - ✅ 성공 시: `https://www.knue.ac.kr/www/selectBbsNttView.do?key=12345&bbsNo=678&nttNo=9012`로 리다이렉트
-- ❌ 실패 시: "잘못된 주소입니다" 알림 후 홈페이지로 리다이렉트
+- ❌ 실패 시: "잘못된 주소입니다" (또는 만료 시 "만료된 코드입니다") 알림 후 홈페이지로 리다이렉트
 
 ---
 

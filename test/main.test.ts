@@ -13,6 +13,7 @@ import {
   validateEncodeParams,
   validateParameterRange,
   validateExpiryDays,
+  parseExpiryDaysParam,
   isValidNumber,
 } from '../src/validators';
 import type { encodeURL as encodeURLType, decodeURL as decodeURLType } from '../src/urlEncoder';
@@ -215,6 +216,51 @@ describe('Validators Module', () => {
     });
   });
 
+  describe('parseExpiryDaysParam', () => {
+    it('should treat an absent parameter as "no expiry"', () => {
+      const result = parseExpiryDaysParam(undefined);
+      expect(result.valid).toBe(true);
+      expect(result.days).toBeUndefined();
+    });
+
+    it('should treat an empty string as "no expiry"', () => {
+      const result = parseExpiryDaysParam('');
+      expect(result.valid).toBe(true);
+      expect(result.days).toBeUndefined();
+    });
+
+    it('should parse a valid digit string', () => {
+      const result = parseExpiryDaysParam('30');
+      expect(result.valid).toBe(true);
+      expect(result.days).toBe(30);
+    });
+
+    it('should reject a non-numeric string instead of silently issuing a permanent link', () => {
+      const result = parseExpiryDaysParam('foo');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+      expect(result.days).toBeUndefined();
+    });
+
+    it('should reject a string with trailing garbage instead of truncating it', () => {
+      const result = parseExpiryDaysParam('30abc');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should reject a decimal string instead of truncating it', () => {
+      const result = parseExpiryDaysParam('3.5');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+
+    it('should still enforce the numeric range for a well-formed digit string', () => {
+      const result = parseExpiryDaysParam('99999');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+    });
+  });
+
   describe('isValidNumber', () => {
     it('should return true for valid numbers', () => {
       expect(isValidNumber(123)).toBe(true);
@@ -242,10 +288,16 @@ describe('Validators Module', () => {
 });
 
 // Mock dependencies
-vi.mock('../src/urlEncoder', () => ({
-  encodeURL: vi.fn(),
-  decodeURL: vi.fn(),
-}));
+vi.mock('../src/urlEncoder', async (importOriginal) => {
+  // `kstEpochDayToDate` is pure (no DOM/network side effects), so keep the
+  // real implementation; only encodeURL/decodeURL need per-test mocking.
+  const actual = await importOriginal<typeof import('../src/urlEncoder')>();
+  return {
+    ...actual,
+    encodeURL: vi.fn(),
+    decodeURL: vi.fn(),
+  };
+});
 vi.mock('qrcode', () => ({
   default: {
     toCanvas: vi.fn(),
@@ -449,7 +501,7 @@ describe('main.ts Logic', () => {
 
     it('should render the expiry date under the short URL when expDays is set', async () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=30';
-      mockedEncodeURL.mockReturnValue({ code: 'shortCode' });
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode', expiryEpochDay: 20500 });
 
       window.onload();
       await flushPromises();
@@ -466,6 +518,21 @@ describe('main.ts Logic', () => {
       expect(resultDiv?.textContent).toContain('유효기간:');
     });
 
+    it('renders the expiry date from the encoded expiryEpochDay rather than recomputing it from a fresh clock read', async () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=30';
+      // KST epoch day for 2026-06-15 (see src/urlEncoder.ts `toKstEpochDay`).
+      const expiryEpochDay = Math.floor(Date.UTC(2026, 5, 15) / 86_400_000);
+      mockedEncodeURL.mockReturnValue({ code: 'shortCode', expiryEpochDay });
+
+      window.onload();
+      await flushPromises();
+
+      const resultDiv = document.getElementById('result');
+      // ko-KR rendering (Asia/Seoul) of 2026-06-15, independent of the
+      // machine's local clock/timezone at test-run time.
+      expect(resultDiv?.textContent).toContain('2026. 6. 15.');
+    });
+
     it('should display an error when expDays is out of the valid range', () => {
       window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=99999';
 
@@ -473,6 +540,17 @@ describe('main.ts Logic', () => {
 
       const resultDiv = document.getElementById('result');
       expect(resultDiv?.innerText).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+      expect(QRCode.toCanvas).not.toHaveBeenCalled();
+    });
+
+    it('should reject a malformed expDays instead of silently issuing a permanent link', () => {
+      window.location.search = '?site=www&key=1&bbsNo=2&nttNo=3&expDays=foo';
+
+      window.onload();
+
+      const resultDiv = document.getElementById('result');
+      expect(resultDiv?.innerText).toBe('오류: 유효기간은 1일에서 3650일 사이여야 합니다.');
+      expect(mockedEncodeURL).not.toHaveBeenCalled();
       expect(QRCode.toCanvas).not.toHaveBeenCalled();
     });
 

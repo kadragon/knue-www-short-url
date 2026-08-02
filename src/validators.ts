@@ -144,15 +144,17 @@ export function validateParameterRange(params: {
 }
 
 /**
- * Encode 모드에서 선택적 만료일수(`expDays`)를 검증합니다.
+ * Validates the optional expiry-days value (`expDays`) used by encode mode.
  *
- * 값이 없는 경우(undefined/null/''/NaN)만 "만료 없음"을 의미하므로 유효한
- * 것으로 간주합니다. 그 외의 값은 VALIDATION.MIN_EXPIRY_DAYS ~
- * MAX_EXPIRY_DAYS 범위의 정수여야 하며, 문자열('30')이나 Infinity처럼
- * 숫자가 아니거나 유한하지 않은 값은 모두 거부됩니다.
+ * Only an absent value (undefined/null/''/NaN) means "no expiry" and is treated
+ * as valid — NaN is included because that is what `parseInt` yields for a
+ * missing query parameter. Anything else must be an integer within
+ * VALIDATION.MIN_EXPIRY_DAYS..MAX_EXPIRY_DAYS; non-numeric or non-finite values
+ * such as the string '30' or Infinity are rejected rather than silently
+ * degrading to "no expiry".
  *
- * @param expDays - 검증할 만료일수 (없으면 만료 없음)
- * @returns 검증 결과 객체
+ * @param expDays - expiry days to validate (absent means no expiry)
+ * @returns validation result
  *
  * @example
  * validateExpiryDays(undefined);  // { valid: true }
@@ -186,4 +188,52 @@ export function validateExpiryDays(expDays: unknown): ValidationResult {
   }
 
   return { valid: true };
+}
+
+interface ExpiryDaysParamResult extends ValidationResult {
+  /** Parsed integer day count — set only when the value was present and valid. */
+  days?: number;
+}
+
+/**
+ * Strictly parses and validates the raw `expDays` query-string parameter.
+ *
+ * Unlike `parseInt`, anything that is not digits-only (after trimming) is
+ * rejected instead of silently coerced: `'30abc'`, `'3.5'` and `'foo'` would
+ * otherwise become 30, 3 and NaN. The NaN case is the dangerous one — treating
+ * a malformed value the same as an absent one would quietly issue a permanent
+ * link to someone who asked for a temporary one.
+ *
+ * An absent parameter, or one that is empty after trimming, still means
+ * "no expiry" and stays valid. Only a present-but-malformed value is rejected.
+ *
+ * @param raw - raw string value of the `expDays` query parameter (undefined if absent)
+ * @returns validation result; `days` is set only when a valid value was present.
+ *
+ * @example
+ * parseExpiryDaysParam(undefined); // { valid: true }
+ * parseExpiryDaysParam('');        // { valid: true }
+ * parseExpiryDaysParam('30');      // { valid: true, days: 30 }
+ * parseExpiryDaysParam('foo');     // { valid: false, error: '...' }
+ * parseExpiryDaysParam('30abc');   // { valid: false, error: '...' }
+ * parseExpiryDaysParam('3.5');     // { valid: false, error: '...' }
+ */
+export function parseExpiryDaysParam(raw: string | undefined): ExpiryDaysParamResult {
+  const trimmed = raw?.trim();
+
+  if (!trimmed) {
+    return { valid: true };
+  }
+
+  if (!/^\d+$/.test(trimmed)) {
+    return { valid: false, error: t('INVALID_EXPIRY_RANGE') };
+  }
+
+  const days = Number(trimmed);
+  const rangeCheck = validateExpiryDays(days);
+  if (!rangeCheck.valid) {
+    return rangeCheck;
+  }
+
+  return { valid: true, days };
 }

@@ -48,16 +48,30 @@
   THEN {error: "존재하지 않는 사이트 코드입니다."} 반환
   ```
 
+- **AC-6**: 만료일이 지난 코드는 만료 오류를 반환 (KST 기준)
+  ```gherkin
+  GIVEN 5-요소 코드([siteNum, key, bbsNo, nttNo, expiryEpochDay])이며
+        expiryEpochDay가 나타내는 KST 날짜가 이미 지남
+  WHEN decodeURL(code, now) 호출
+  THEN {error: "만료된 코드입니다."} 반환
+  ```
+  만료 여부는 `toKstEpochDay(now) > expiryEpochDay`로 판정한다. 날짜 경계는
+  항상 Asia/Seoul(KST, 고정 +9시간, DST 없음)에 고정된다 — 단축 코드는
+  여러 수신자에게 공유되므로, 열람자의 로컬 타임존으로 경계를 계산하면
+  같은 코드가 사람마다 다른 날짜에 만료된 것처럼 보이게 된다.
+
 ---
 
 ## Examples (Tabular)
 
 | Case | Code | Expected Result | Notes |
 |------|------|---|---|
-| Valid decode | "ABC123" (인코딩된) | {url: "https://www.knue.ac.kr/..."} | 왕복 테스트 |
+| Valid decode | "ABC123" (인코딩된) | {url: "https://www.knue.ac.kr/..."} | 왕복 테스트 (4-요소, 만료 없음) |
+| Valid decode with expiry | 5-요소 코드, 만료일 미도래 | {url: "https://www.knue.ac.kr/..."} | 왕복 테스트 |
 | Invalid code | "invalid" | {error: "잘못된 코드입니다."} | Sqids.decode([]) 반환 |
-| Wrong length | "XYZ" (3개 미만 값) | {error: "잘못된 코드입니다."} | 배열 길이 ≠ 4 |
+| Wrong length | "XYZ" (3개 미만 값) | {error: "잘못된 코드입니다."} | 배열 길이가 4도 5도 아님 |
 | Bad siteNum | code가 36을 디코드 | {error: "존재하지 않는 사이트 코드입니다."} | siteMapReverse 누락 |
+| Expired | 5-요소 코드, expiryEpochDay(KST)가 지남 | {error: "만료된 코드입니다."} | `toKstEpochDay(now) > expiryEpochDay` |
 
 ---
 
@@ -75,8 +89,9 @@ function decodeURL(code: string)
 - Failure: `{error: string}` - 한글 오류 메시지
 
 **Errors**:
-- `"잘못된 코드입니다."` - 코드 형식 오류 또는 배열 길이 ≠ 4
+- `"잘못된 코드입니다."` - 코드 형식 오류 또는 배열 길이가 4(만료 없음)도 5(만료 포함)도 아님
 - `"존재하지 않는 사이트 코드입니다."` - siteMapReverse 누락
+- `"만료된 코드입니다."` - 5-요소 코드이며 KST 기준 만료일이 지남
 
 ---
 
@@ -84,8 +99,10 @@ function decodeURL(code: string)
 
 **Input Constraints**:
 - code는 Sqids.decode() 호출로 배열 변환
-- 배열 길이는 정확히 4 ([siteNum, key, bbsNo, nttNo])
+- 배열 길이는 4 ([siteNum, key, bbsNo, nttNo], 만료 없음) 또는 5
+  ([siteNum, key, bbsNo, nttNo, expiryEpochDay], 만료 포함)
 - siteNum ∈ siteMapReverse 키
+- expiryEpochDay(있는 경우)는 KST(Asia/Seoul, 고정 +9시간) 기준 epoch day
 
 **Output Format**:
 - URL: `https://www.knue.ac.kr/{site}/selectBbsNttView.do?key={key}&bbsNo={bbsNo}&nttNo={nttNo}`
