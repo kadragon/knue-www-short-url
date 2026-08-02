@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { resolve } from 'node:path';
+
+// Production serves the app from this subpath (see docs/runbook.md → Deploy).
+const DEPLOY_BASE = '/s/';
 
 // Guards the SEO meta/OG/Twitter tags in index.html against regression.
 // Crawlers don't run JS, so these must live in the static HTML head.
@@ -38,12 +41,19 @@ describe('SEO meta tags', () => {
   });
 
   it('ships the asset og:image points at', () => {
-    // The absolute og:image URL can't be resolved at test time, but vite copies
-    // public/ to the dist root — so the referenced basename must exist there, or
-    // the deployed card 404s while every other assertion here still passes.
-    const image = metaByProp('og:image') as string;
-    const assetName = basename(new URL(image).pathname);
-    expect(existsSync(resolve(process.cwd(), 'public', assetName))).toBe(true);
+    // The absolute og:image URL can't be fetched at test time, but the mapping is
+    // fixed: production serves the built app under DEPLOY_BASE and vite copies
+    // public/ to the dist root, so the whole path after the base must resolve
+    // inside public/. Checking only the filename would let a wrong directory
+    // (…/s/missing/og-image.png) pass while crawlers get a 404.
+    const image = metaByProp('og:image');
+    expect(image).toBeTruthy();
+
+    const url = new URL(image as string);
+    expect(url.pathname.startsWith(DEPLOY_BASE)).toBe(true);
+
+    const assetPath = resolve(process.cwd(), 'public', url.pathname.slice(DEPLOY_BASE.length));
+    expect(existsSync(assetPath), assetPath).toBe(true);
   });
 
   it('has alt text for the card image', () => {
