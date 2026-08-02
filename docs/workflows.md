@@ -6,8 +6,10 @@ Standard cycles per work type. Pick one primary workflow per cycle. Small solo r
 
 The default cycle for behavioral changes. Delegation checkpoints are named steps, not optional suggestions.
 
-**Step 0: Branch**
-Ensure a feature branch before any edit. If on `main`, run `git checkout -b <type>/<slug>` (`feat/`, `fix/`, `refactor/` …). Never edit `main` directly.
+**Step 0: Sync, then branch**
+Run `git fetch origin && git log --oneline main..origin/main` **before picking work**, and pull if `main` is behind. A clean `git status` says nothing about whether `main` is current — this repo gets worked on from more than one checkout, so `backlog.md` on a stale `main` can advertise items that are already merged. Skipping this once cost a full duplicate SEO sprint (PR #58, closed as superseded by #52).
+
+Then ensure a feature branch before any edit. If on `main`, run `git checkout -b <type>/<slug>` (`feat/`, `fix/`, `refactor/` …). Never edit `main` directly.
 
 **Step 1: Scope check (delegation gate)**
 Check the objective triggers in `docs/delegation.md`:

@@ -9,6 +9,7 @@
 
 ## Tech Debt
 
+- [ ] [TOOLING] `test/` 타입 안전성 — `tsconfig.json` `include`가 `["src"]`라 테스트는 tsc 검사 대상 밖이고, `@types/node`는 vitest 경유 전이 설치(24.9.1)만 있을 뿐 직접 devDependency로 선언돼 있지 않음. 그 결과 `test/seo.test.ts`의 `node:fs`/`node:path`/`process`가 런타임에만 동작하고 에디터·standalone `tsc`에서는 TS2591로 보임. `@types/node` 직접 선언 + 테스트 포함 tsconfig(또는 별도 typecheck 스크립트)로 가드. Effort S.
 - [ ] [TEST] open-redirect guard의 non-KNUE truthy-url 브랜치 미테스트 — `decodeURL`이 `{url:'https://evil.example/'}`처럼 truthy지만 `KNUE_DOMAIN`으로 시작하지 않는 값을 반환할 때 `alert(INVALID_CODE)` + fetch 미호출을 검증. 현재 else-branch 테스트는 `url` undefined(falsy 단락)만 커버해 실제 가드 브랜치(`app.ts:62` `&&` 우변)가 미검증 상태. 이번 스프린트 이전부터 존재하던 갭. Effort S.
 
 ---
