@@ -134,3 +134,35 @@ function decodeURL(code: string)
 **Trace-To**:
 - `test/index.test.js` (lines 12-42, 50-54)
 - `src/js/urlEncoder.js:decodeURL()` (lines 66-86)
+
+## Local bulk inspection
+
+`inspectShortUrl(input, expected?, now?)` returns a stable status (`valid`,
+`expired`, `invalid`, or `mismatch`), a localized-message key in `reason`, and
+`url` when restoration is possible. `decodeURL` and inspection share a decoding
+core; the existing redirect API still returns only an error for expired links.
+Inspection retains a structurally valid expired URL and prioritizes expiry over
+expected-original mismatch in its status; its reason reports both issues when an
+expired link also mismatches the expected original. Invalid site IDs remain invalid
+even when expired. Decoded numbers outside the safe-integer range are rejected
+before canonical re-encoding, so malformed rows cannot interrupt the batch.
+
+The input boundary accepts only complete `https://www.knue.ac.kr/s/?<code>` URLs,
+with the configured maximum code length and Sqids alphabet. Other origins,
+paths, credentials, fragments, query parameters, percent-encoded codes, and
+noncanonical Sqids codes are invalid. Expected originals must use the KNUE domain;
+comparison normalizes query ordering only and rejects repeated `key`, `bbsNo`,
+or `nttNo` parameters. No HTTP existence check is performed.
+
+`?inspect=1` is routed before encode/decode. The default page links to this screen.
+The screen accepts newline-separated short URLs with an optional tab-separated
+expected original. It skips blank lines, retains original line numbers, rejects
+extra columns, and uses text nodes for all pasted content. Expired, invalid, and
+mismatched rows can be copied with line numbers and reasons; clipboard failure
+and unsupported environments receive localized feedback. Input edits discard
+stale results. Draft input and results survive locale changes in memory only.
+
+Inspection invokes neither navigation nor redirect analytics and sends no input
+externally. The UI explicitly distinguishes restoration from verification of
+post existence, content, and access permission. Coverage lives in
+`test/inspection.test.ts` and `test/inspection-ui.test.ts`.

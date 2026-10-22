@@ -6,7 +6,7 @@ import {
   validateParameterRange,
   parseExpiryDaysParam,
 } from './validators';
-import { createCopyClickHandler, handleGenerateQRCode } from './uiHandlers';
+import { createCopyClickHandler, handleGenerateQRCode, renderInspection } from './uiHandlers';
 import { logError } from './errorLogger';
 import { t, initLocale, setLocale, getLocale } from './i18n';
 import { trackRedirect } from './analytics';
@@ -53,6 +53,13 @@ function render(): void {
   // Encode-success mode appends an <a> to resultDiv, so omitting this reset would
   // accumulate duplicate links.
   resultDiv.replaceChildren();
+  if (new URLSearchParams(search).get('inspect') === '1') {
+    document.getElementById('container')?.classList.add('inspection-container');
+    qrCanvas.hidden = true;
+    copyInfoDiv.hidden = true;
+    renderInspection(resultDiv);
+    return;
+  }
 
   /**
    * MODE 1: Decode Mode
@@ -192,6 +199,11 @@ function render(): void {
    * Action: display the default guidance message.
    */
   resultDiv.innerText = t('DEFAULT_MESSAGE');
+  const inspectionLink = document.createElement('a');
+  inspectionLink.href = '?inspect=1';
+  inspectionLink.className = 'inspection-entry';
+  inspectionLink.textContent = t('INSPECT_TITLE');
+  resultDiv.append(inspectionLink);
 }
 
 /**

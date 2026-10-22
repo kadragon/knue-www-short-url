@@ -211,3 +211,22 @@ https://www.knue.ac.kr/s/?AbC123
 ### 라이선스
 
 ISC License
+
+### Bulk inspection before publishing
+
+Open `https://www.knue.ac.kr/s/?inspect=1` (also linked from the default screen).
+Paste one complete production short URL per line. To compare against an expected
+original, append a tab and the original URL on the same line; spreadsheet cells
+can be pasted directly. Blank lines are skipped while original line numbers are
+preserved.
+
+The table reports restored, expired, invalid-format, or original-mismatch links.
+Expired links still show the restored address when structurally valid. Expected
+URLs are compared as complete URLs with query ordering normalized; duplicated
+identity parameters are rejected. Expiry takes precedence over a mismatch.
+Copy problem rows to get only problematic inputs, line numbers, expected URLs,
+statuses, and reasons. Editing the input clears stale results.
+
+Inspection runs locally without navigating, sending redirect analytics, or
+persisting/transmitting pasted data. A restored URL does **not** prove that the
+post exists, that its content is correct, or that recipients have permission.
