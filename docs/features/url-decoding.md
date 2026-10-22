@@ -142,7 +142,10 @@ function decodeURL(code: string)
 `url` when restoration is possible. `decodeURL` and inspection share a decoding
 core; the existing redirect API still returns only an error for expired links.
 Inspection retains a structurally valid expired URL and prioritizes expiry over
-expected-original mismatch. Invalid site IDs remain invalid even when expired.
+expected-original mismatch in its status; its reason reports both issues when an
+expired link also mismatches the expected original. Invalid site IDs remain invalid
+even when expired. Decoded numbers outside the safe-integer range are rejected
+before canonical re-encoding, so malformed rows cannot interrupt the batch.
 
 The input boundary accepts only complete `https://www.knue.ac.kr/s/?<code>` URLs,
 with the configured maximum code length and Sqids alphabet. Other origins,

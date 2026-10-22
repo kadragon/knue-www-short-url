@@ -35,6 +35,10 @@ export const ERROR_MESSAGES = {
     ko: 'https://www.knue.ac.kr/s/?코드 형식의 단축 URL을 입력하세요.',
     en: 'Enter a short URL in the form https://www.knue.ac.kr/s/?code.',
   },
+  INSPECT_EXPIRED_MISMATCH: {
+    ko: '만료된 코드입니다. 기대한 원본 URL과 복원 주소가 다르거나 원본 URL 형식이 잘못되었습니다.',
+    en: 'This code has expired. The expected original differs from the restored URL or has an invalid format.',
+  },
   INSPECT_MISMATCH_REASON: {
     ko: '기대한 원본 URL과 복원 주소가 다르거나 원본 URL 형식이 잘못되었습니다.',
     en: 'The expected original differs from the restored URL or has an invalid format.',

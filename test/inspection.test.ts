@@ -69,6 +69,21 @@ describe('short URL inspection', () => {
       );
     }
   });
+  it('classifies codes decoding beyond safe integer limits without throwing', () => {
+    expect(
+      inspectShortUrl(`https://www.knue.ac.kr/s/?${'a'.repeat(20)}`, undefined, now)
+    ).toMatchObject({ status: 'invalid' });
+  });
+  it('retains both expiry and original mismatch in its reason', () => {
+    const expired = encodeURL({ ...params, expDays: 1 }, now - 3 * 86400000).code!;
+    expect(
+      inspectShortUrl(
+        `https://www.knue.ac.kr/s/?${expired}`,
+        original.replace('nttNo=3', 'nttNo=4'),
+        now
+      )
+    ).toMatchObject({ status: 'expired', url: original, reason: 'INSPECT_EXPIRED_MISMATCH' });
+  });
   it('remains valid throughout its KST expiry date', () => {
     const exp = encodeURL({ ...params, expDays: 1 }, now).code!;
     const input = `https://www.knue.ac.kr/s/?${exp}`;

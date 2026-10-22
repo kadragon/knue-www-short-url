@@ -70,6 +70,30 @@ describe('inspection screen', () => {
     expect(document.querySelector('tbody')).toBeNull();
     expect(document.querySelector<HTMLButtonElement>('#inspect-copy')!.disabled).toBe(true);
   });
+  it('continues inspecting valid rows after an unsafe numeric code', () => {
+    renderInspection(document.getElementById('result')!);
+    input().value = `https://www.knue.ac.kr/s/?${'a'.repeat(20)}\n${link}`;
+    run();
+    const rows = document.querySelectorAll<HTMLTableRowElement>('tbody tr');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].dataset.status).toBe('invalid');
+    expect(rows[1].dataset.status).toBe('valid');
+    expect(rows[1].textContent).toContain(original);
+  });
+  it('copies both expiry and expected-original mismatch reasons', async () => {
+    renderInspection(document.getElementById('result')!);
+    const expired = encodeURL({ site: 'www', key: 1, bbsNo: 2, nttNo: 3, expDays: 1 }, 0).code!;
+    input().value = `https://www.knue.ac.kr/s/?${expired}\t${original.replace('nttNo=3', 'nttNo=9')}`;
+    run();
+    expect(document.querySelector('tbody')!.textContent).toContain('만료');
+    expect(document.querySelector('tbody')!.textContent).toContain('다르거나');
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    document.querySelector<HTMLButtonElement>('#inspect-copy')!.click();
+    await vi.waitFor(() => expect(writeText).toHaveBeenCalledOnce());
+    expect(writeText.mock.calls[0][0]).toContain('만료');
+    expect(writeText.mock.calls[0][0]).toContain('다르거나');
+  });
   it('routes inspection before encoding without changing location or calling analytics', async () => {
     window.history.replaceState(null, '', '/s/?inspect=1');
     const href = window.location.href;

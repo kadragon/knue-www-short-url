@@ -224,13 +224,24 @@ export function inspectShortUrl(
 ): InspectionResult {
   const code = parseInspectionUrl(input);
   if (!code) return { status: 'invalid', reason: 'INSPECT_URL_ERROR' };
-  if (sqids.encode(sqids.decode(code)) !== code) {
+  const numbers = sqids.decode(code);
+  if (
+    numbers.some((value) => !Number.isSafeInteger(value) || value < 0) ||
+    sqids.encode(numbers) !== code
+  ) {
     return { status: 'invalid', reason: 'INVALID_CODE_FORMAT' };
   }
   const result = decodeDetails(code, now);
   if (result.reason) return { status: 'invalid', reason: result.reason };
-  if (result.expired) return { status: 'expired', url: result.url, reason: 'EXPIRED_CODE' };
-  if (expected?.trim() && !matchesExpectedUrl(result.url!, expected)) {
+  const mismatch = Boolean(expected?.trim() && !matchesExpectedUrl(result.url!, expected));
+  if (result.expired) {
+    return {
+      status: 'expired',
+      url: result.url,
+      reason: mismatch ? 'INSPECT_EXPIRED_MISMATCH' : 'EXPIRED_CODE',
+    };
+  }
+  if (mismatch) {
     return { status: 'mismatch', url: result.url, reason: 'INSPECT_MISMATCH_REASON' };
   }
   return { status: 'valid', url: result.url, reason: 'INSPECT_VALID' };
