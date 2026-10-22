@@ -1,7 +1,8 @@
 import Sqids from 'sqids';
 import { siteMap, siteMapReverse } from './knueSites';
 import { t } from './i18n';
-import { isValidNumber } from './validators';
+import { isValidNumber, parseInspectionUrl, matchesExpectedUrl } from './validators';
+import { ERROR_MESSAGES } from './constants';
 
 /**
  * Sqids instance configured to optimize generated short codes.
@@ -175,20 +176,28 @@ interface DecodeResult {
  * @security Returned URLs are always restricted to the https://www.knue.ac.kr/ domain.
  */
 export function decodeURL(code: string, now: number = Date.now()): DecodeResult {
+  const result = decodeDetails(code, now);
+  if (result.expired) return { error: t('EXPIRED_CODE') };
+  if (result.reason) return { error: t(result.reason) };
+  return { url: result.url };
+}
+
+function decodeDetails(
+  code: string,
+  now: number
+): { url?: string; expired?: boolean; reason?: keyof typeof ERROR_MESSAGES } {
   const arr = sqids.decode(code);
   if (arr.length !== 4 && arr.length !== 5) {
-    return { error: t('INVALID_CODE_FORMAT') };
+    return { reason: 'INVALID_CODE_FORMAT' };
   }
 
   const [siteNum, key, bbsNo, nttNo, expiryEpochDay] = arr;
 
-  if (arr.length === 5 && toKstEpochDay(now) > expiryEpochDay) {
-    return { error: t('EXPIRED_CODE') };
-  }
+  const expired = arr.length === 5 && toKstEpochDay(now) > expiryEpochDay;
 
   const site = siteMapReverse[siteNum];
   if (!site) {
-    return { error: t('UNKNOWN_SITE_CODE') };
+    return { reason: 'UNKNOWN_SITE_CODE', expired };
   }
 
   const url = new URL(`https://www.knue.ac.kr/${site}/selectBbsNttView.do`);
@@ -198,5 +207,31 @@ export function decodeURL(code: string, now: number = Date.now()): DecodeResult 
     nttNo: String(nttNo),
   }).toString();
 
-  return { url: url.toString() };
+  return { url: url.toString(), expired };
+}
+
+export interface InspectionResult {
+  status: 'valid' | 'expired' | 'invalid' | 'mismatch';
+  url?: string;
+  reason: keyof typeof ERROR_MESSAGES;
+}
+
+/** Restore and compare a link locally without navigation or network effects. */
+export function inspectShortUrl(
+  input: string,
+  expected?: string,
+  now: number = Date.now()
+): InspectionResult {
+  const code = parseInspectionUrl(input);
+  if (!code) return { status: 'invalid', reason: 'INSPECT_URL_ERROR' };
+  if (sqids.encode(sqids.decode(code)) !== code) {
+    return { status: 'invalid', reason: 'INVALID_CODE_FORMAT' };
+  }
+  const result = decodeDetails(code, now);
+  if (result.reason) return { status: 'invalid', reason: result.reason };
+  if (result.expired) return { status: 'expired', url: result.url, reason: 'EXPIRED_CODE' };
+  if (expected?.trim() && !matchesExpectedUrl(result.url!, expected)) {
+    return { status: 'mismatch', url: result.url, reason: 'INSPECT_MISMATCH_REASON' };
+  }
+  return { status: 'valid', url: result.url, reason: 'INSPECT_VALID' };
 }

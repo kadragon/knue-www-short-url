@@ -32,3 +32,11 @@ Pure logic (`urlEncoder`, `validators`) has no DOM/side effects — keeps it tes
 
 - A decoded URL must start with `VALIDATION.KNUE_DOMAIN` (`https://www.knue.ac.kr/`) before it is redirected — open-redirect guard at `app.ts:61`. See Golden Principles.
 - The `knueSites.ts` mapping is a bidirectional stability contract: reassigning an existing numeric ID breaks already-published short URLs. Add only, never reuse.
+
+## Inspection route
+
+`?inspect=1` is handled before encode/decode routing. `validators.ts` validates
+complete short URLs and compares expected originals; `urlEncoder.ts` exposes the
+pure `inspectShortUrl` API using the shared decoding core. `uiHandlers.ts` owns
+the inspection form, ephemeral draft/results, safe text rendering, and clipboard
+feedback. No inspection path calls analytics or initiates navigation.

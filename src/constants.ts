@@ -11,6 +11,43 @@
  * - Fewer typing errors: use constants instead of string literals.
  */
 export const ERROR_MESSAGES = {
+  INSPECT_TITLE: { ko: '공지 배포 전 링크 일괄 검사', en: 'Check links before publishing' },
+  INSPECT_HELP: {
+    ko: '한 줄에 단축 URL 하나를 입력하세요. 기대한 원본 URL은 탭으로 구분해 함께 입력할 수 있습니다.',
+    en: 'Enter one short URL per line. Optionally add the expected original URL separated by a tab.',
+  },
+  INSPECT_NOTICE: {
+    ko: '복원 정상은 게시글의 존재·내용·접근 권한을 확인했다는 뜻이 아닙니다. 입력은 저장하거나 외부로 전송하지 않으며, 검사 중 페이지 이동이나 접속 통계 전송은 없습니다.',
+    en: 'Successful restoration does not verify post existence, content, or access permissions. Inputs are not stored or transmitted; inspection does not navigate or send redirect analytics.',
+  },
+  INSPECT_INPUT: { ko: '검사할 링크', en: 'Links to inspect' },
+  INSPECT_RUN: { ko: '링크 검사', en: 'Inspect links' },
+  INSPECT_COPY: { ko: '문제 행만 복사', en: 'Copy problem rows' },
+  INSPECT_LINE: { ko: '행', en: 'Line' },
+  INSPECT_ORIGINAL: { ko: '복원 주소', en: 'Restored URL' },
+  INSPECT_STATUS: { ko: '상태', en: 'Status' },
+  INSPECT_REASON: { ko: '사유', en: 'Reason' },
+  INSPECT_VALID: { ko: '복원 정상', en: 'Restored' },
+  INSPECT_EXPIRED: { ko: '만료', en: 'Expired' },
+  INSPECT_INVALID: { ko: '형식 오류', en: 'Invalid format' },
+  INSPECT_MISMATCH: { ko: '원본 불일치', en: 'Original mismatch' },
+  INSPECT_URL_ERROR: {
+    ko: 'https://www.knue.ac.kr/s/?코드 형식의 단축 URL을 입력하세요.',
+    en: 'Enter a short URL in the form https://www.knue.ac.kr/s/?code.',
+  },
+  INSPECT_MISMATCH_REASON: {
+    ko: '기대한 원본 URL과 복원 주소가 다르거나 원본 URL 형식이 잘못되었습니다.',
+    en: 'The expected original differs from the restored URL or has an invalid format.',
+  },
+  INSPECT_COLUMNS_ERROR: {
+    ko: '한 행에는 단축 URL과 선택 사항인 원본 URL만 입력하세요.',
+    en: 'Each row must contain a short URL and at most one expected original URL.',
+  },
+  INSPECT_EMPTY: { ko: '검사할 링크를 입력하세요.', en: 'Enter links to inspect.' },
+  INSPECT_DONE: {
+    ko: (count: string) => `${count}개 링크 검사 완료`,
+    en: (count: string) => `Inspected ${count} links`,
+  },
   // Decode errors
   INVALID_CODE: { ko: '잘못된 주소입니다.', en: 'Invalid address.' },
   INVALID_CODE_FORMAT: { ko: '잘못된 코드입니다.', en: 'Invalid code.' },
@@ -80,6 +117,7 @@ export const ERROR_MESSAGES = {
  * validators.ts references these values to centralize validation thresholds.
  */
 export const VALIDATION = {
+  SHORT_URL_BASE: 'https://www.knue.ac.kr/s/',
   MAX_CODE_LENGTH: 50,
   MAX_NUMERIC_VALUE: 999999999,
   MIN_NUMERIC_VALUE: 0,

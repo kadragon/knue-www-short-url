@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- [done] Add batch short-link inspection and problem-row copying (2026-10-22) → docs/features/url-decoding.md
 - [done] Tech Debt (2026-08-02)
 
 - [done] Features: URL 유효기간 — `?expDays=N`으로 만료일을 short code(Sqids 5번째 원소, epoch day)에 인코딩, 만료 없는 기존 4원소 코드 하위호환 (2026-08-02)

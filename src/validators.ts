@@ -237,3 +237,33 @@ export function parseExpiryDaysParam(raw: string | undefined): ExpiryDaysParamRe
 
   return { valid: true, days };
 }
+
+/** Accept only complete production short URLs, without URL parser repairs. */
+export function parseInspectionUrl(input: string): string | undefined {
+  const trimmed = input.trim();
+  if (!trimmed.startsWith(`${VALIDATION.SHORT_URL_BASE}?`)) return undefined;
+  const code = trimmed.slice(VALIDATION.SHORT_URL_BASE.length + 1);
+  return validateDecodeCode(code).valid && /^[a-zA-Z0-9._~-]+$/.test(code) ? code : undefined;
+}
+
+/** Compare complete URLs, ignoring query ordering only. */
+export function matchesExpectedUrl(restored: string, expected: string): boolean {
+  try {
+    const actual = new URL(restored);
+    const candidate = new URL(expected.trim());
+    if (
+      !expected.trim().startsWith(VALIDATION.KNUE_DOMAIN) ||
+      candidate.username ||
+      candidate.password
+    )
+      return false;
+    for (const field of ['key', 'bbsNo', 'nttNo']) {
+      if (candidate.searchParams.getAll(field).length !== 1) return false;
+    }
+    actual.searchParams.sort();
+    candidate.searchParams.sort();
+    return actual.href === candidate.href;
+  } catch {
+    return false;
+  }
+}

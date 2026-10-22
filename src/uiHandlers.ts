@@ -1,5 +1,7 @@
 // GENERATED FROM SPEC-ui-handlers
 
+import { inspectShortUrl, type InspectionResult } from './urlEncoder';
+import { ERROR_MESSAGES } from './constants';
 import { logError } from './errorLogger';
 import { t } from './i18n';
 
@@ -92,4 +94,153 @@ export function createCopyClickHandler(url: string) {
     event.preventDefault();
     await handleCopyToClipboard(url);
   };
+}
+
+interface InspectionRow extends InspectionResult {
+  line: number;
+  input: string;
+  expected?: string;
+}
+
+// Ephemeral state only: locale changes preserve the current draft and results.
+let inspectionInput = '';
+let inspectionRows: InspectionRow[] = [];
+let inspectionFeedback: keyof typeof ERROR_MESSAGES | undefined;
+const statusMessages = {
+  valid: 'INSPECT_VALID',
+  expired: 'INSPECT_EXPIRED',
+  invalid: 'INSPECT_INVALID',
+  mismatch: 'INSPECT_MISMATCH',
+} as const;
+
+/** Render a local-only inspection form. All pasted content is rendered as text. */
+export function renderInspection(root: HTMLElement): void {
+  root.replaceChildren();
+  const section = document.createElement('section');
+  section.className = 'inspection';
+  const heading = document.createElement('h1');
+  heading.textContent = t('INSPECT_TITLE');
+  const help = document.createElement('p');
+  help.id = 'inspect-help';
+  help.textContent = t('INSPECT_HELP');
+  const notice = document.createElement('p');
+  notice.className = 'inspection-notice';
+  notice.textContent = t('INSPECT_NOTICE');
+  const label = document.createElement('label');
+  label.htmlFor = 'inspect-input';
+  label.textContent = t('INSPECT_INPUT');
+  const textarea = document.createElement('textarea');
+  textarea.id = 'inspect-input';
+  textarea.rows = 7;
+  textarea.spellcheck = false;
+  textarea.setAttribute('aria-describedby', help.id);
+  textarea.value = inspectionInput;
+  const run = document.createElement('button');
+  run.id = 'inspect-run';
+  run.type = 'button';
+  run.textContent = t('INSPECT_RUN');
+  const copy = document.createElement('button');
+  copy.id = 'inspect-copy';
+  copy.type = 'button';
+  copy.textContent = t('INSPECT_COPY');
+  copy.disabled = !inspectionRows.some((row) => row.status !== 'valid');
+  const feedback = document.createElement('p');
+  feedback.setAttribute('role', 'status');
+  feedback.textContent = inspectionFeedback
+    ? t(inspectionFeedback)
+    : inspectionRows.length
+      ? t('INSPECT_DONE', String(inspectionRows.length))
+      : '';
+  const tableRegion = document.createElement('div');
+  tableRegion.className = 'inspection-table';
+  tableRegion.tabIndex = 0;
+  tableRegion.setAttribute('role', 'region');
+  tableRegion.setAttribute('aria-label', t('INSPECT_TITLE'));
+  const table = document.createElement('table');
+  const head = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  for (const key of [
+    'INSPECT_LINE',
+    'INSPECT_INPUT',
+    'INSPECT_ORIGINAL',
+    'INSPECT_STATUS',
+    'INSPECT_REASON',
+  ] as const) {
+    const cell = document.createElement('th');
+    cell.scope = 'col';
+    cell.textContent = t(key);
+    headerRow.append(cell);
+  }
+  head.append(headerRow);
+  const body = document.createElement('tbody');
+  for (const row of inspectionRows) {
+    const tr = document.createElement('tr');
+    tr.dataset.status = row.status;
+    for (const value of [
+      String(row.line),
+      row.input,
+      row.url ?? '—',
+      t(statusMessages[row.status]),
+      t(row.reason),
+    ]) {
+      const cell = document.createElement('td');
+      cell.textContent = value;
+      tr.append(cell);
+    }
+    body.append(tr);
+  }
+  table.append(head, body);
+  if (inspectionRows.length) tableRegion.append(table);
+  textarea.addEventListener('input', () => {
+    inspectionInput = textarea.value;
+    inspectionRows = [];
+    inspectionFeedback = undefined;
+    tableRegion.replaceChildren();
+    feedback.textContent = '';
+    copy.disabled = true;
+  });
+  run.addEventListener('click', () => {
+    inspectionInput = textarea.value;
+    const now = Date.now();
+    inspectionRows = inspectionInput.split(/\r?\n/).flatMap((line, index) => {
+      if (!line.trim()) return [];
+      const columns = line.split('\t');
+      const [input, expected] = columns.map((value) => value.trim());
+      const result: InspectionResult =
+        columns.length > 2
+          ? { status: 'invalid', reason: 'INSPECT_COLUMNS_ERROR' }
+          : inspectShortUrl(input, expected, now);
+      return [{ ...result, line: index + 1, input, expected }];
+    });
+    inspectionFeedback = inspectionRows.length ? undefined : 'INSPECT_EMPTY';
+    renderInspection(root);
+    root.querySelector<HTMLButtonElement>('#inspect-run')?.focus();
+  });
+  copy.addEventListener('click', async () => {
+    const text = inspectionRows
+      .filter((row) => row.status !== 'valid')
+      .map((row) =>
+        [
+          row.line,
+          row.input,
+          row.expected ?? '',
+          t(statusMessages[row.status]),
+          t(row.reason),
+        ].join('\t')
+      )
+      .join('\n');
+    try {
+      if (!navigator.clipboard) {
+        inspectionFeedback = 'CLIPBOARD_NOT_SUPPORTED';
+      } else {
+        await navigator.clipboard.writeText(text);
+        inspectionFeedback = 'CLIPBOARD_COPIED';
+      }
+    } catch {
+      inspectionFeedback = 'CLIPBOARD_COPY_FAILED';
+    }
+    feedback.textContent = t(inspectionFeedback!);
+  });
+  section.append(heading, help, notice, label, textarea, run, copy, feedback, tableRegion);
+  root.append(section);
 }
