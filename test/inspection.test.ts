@@ -84,6 +84,14 @@ describe('short URL inspection', () => {
       )
     ).toMatchObject({ status: 'expired', url: original, reason: 'INSPECT_EXPIRED_MISMATCH' });
   });
+  it.each(['HTTPS://WWW.KNUE.AC.KR', 'https://www.knue.ac.kr:443'])(
+    'accepts equivalent parsed origins %s',
+    (origin) => {
+      expect(
+        inspectShortUrl(short, original.replace('https://www.knue.ac.kr', origin), now).status
+      ).toBe('valid');
+    }
+  );
   it('remains valid throughout its KST expiry date', () => {
     const exp = encodeURL({ ...params, expDays: 1 }, now).code!;
     const input = `https://www.knue.ac.kr/s/?${exp}`;

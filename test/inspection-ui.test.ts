@@ -94,6 +94,35 @@ describe('inspection screen', () => {
     expect(writeText.mock.calls[0][0]).toContain('만료');
     expect(writeText.mock.calls[0][0]).toContain('다르거나');
   });
+  it.each(['input', 'rerender'])('ignores pending clipboard feedback after %s', async (change) => {
+    const root = document.getElementById('result')!;
+    renderInspection(root);
+    input().value = 'invalid';
+    run();
+    let resolveCopy!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      resolveCopy = resolve;
+    });
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: () => pending },
+    });
+    const oldFeedback = document.querySelector('[role="status"]')!;
+    document.querySelector<HTMLButtonElement>('#inspect-copy')!.click();
+    if (change === 'input') {
+      input().value = link;
+      input().dispatchEvent(new Event('input'));
+    } else {
+      renderInspection(root);
+    }
+    const oldText = oldFeedback.textContent;
+    resolveCopy();
+    await pending;
+    await Promise.resolve();
+    expect(oldFeedback.textContent).toBe(oldText);
+    renderInspection(root);
+    expect(document.querySelector('[role="status"]')!.textContent).not.toContain('복사');
+  });
   it('routes inspection before encoding without changing location or calling analytics', async () => {
     window.history.replaceState(null, '', '/s/?inspect=1');
     const href = window.location.href;

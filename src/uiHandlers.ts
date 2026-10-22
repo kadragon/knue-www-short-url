@@ -217,6 +217,7 @@ export function renderInspection(root: HTMLElement): void {
     root.querySelector<HTMLButtonElement>('#inspect-run')?.focus();
   });
   copy.addEventListener('click', async () => {
+    const copiedRows = inspectionRows;
     const text = inspectionRows
       .filter((row) => row.status !== 'valid')
       .map((row) =>
@@ -229,17 +230,20 @@ export function renderInspection(root: HTMLElement): void {
         ].join('\t')
       )
       .join('\n');
+    let copyFeedback: keyof typeof ERROR_MESSAGES;
     try {
       if (!navigator.clipboard) {
-        inspectionFeedback = 'CLIPBOARD_NOT_SUPPORTED';
+        copyFeedback = 'CLIPBOARD_NOT_SUPPORTED';
       } else {
         await navigator.clipboard.writeText(text);
-        inspectionFeedback = 'CLIPBOARD_COPIED';
+        copyFeedback = 'CLIPBOARD_COPIED';
       }
     } catch {
-      inspectionFeedback = 'CLIPBOARD_COPY_FAILED';
+      copyFeedback = 'CLIPBOARD_COPY_FAILED';
     }
-    feedback.textContent = t(inspectionFeedback!);
+    if (inspectionRows !== copiedRows || !root.contains(feedback)) return;
+    inspectionFeedback = copyFeedback;
+    feedback.textContent = t(copyFeedback);
   });
   section.append(heading, help, notice, label, textarea, run, copy, feedback, tableRegion);
   root.append(section);

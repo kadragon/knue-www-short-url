@@ -252,7 +252,7 @@ export function matchesExpectedUrl(restored: string, expected: string): boolean 
     const actual = new URL(restored);
     const candidate = new URL(expected.trim());
     if (
-      !expected.trim().startsWith(VALIDATION.KNUE_DOMAIN) ||
+      candidate.origin !== new URL(VALIDATION.KNUE_DOMAIN).origin ||
       candidate.username ||
       candidate.password
     )
