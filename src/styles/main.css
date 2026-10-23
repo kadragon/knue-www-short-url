@@ -18,6 +18,31 @@ html, body {
     width: 500px; /* max-width for larger screens */
 }
 
+#locale-toggle {
+    display: block;
+    margin: 0 0 24px auto;
+    padding: 10px 16px;
+    min-height: 44px;
+    border: 1px solid #c8d7eb;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #1859ad;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#locale-toggle:hover {
+    background: #dfeaff;
+    border-color: #1859ad;
+}
+
+#locale-toggle:focus-visible {
+    outline: 3px solid #1877f2;
+    outline-offset: 3px;
+}
+
 #result a {
     cursor: pointer;
     color: #1877f2;
