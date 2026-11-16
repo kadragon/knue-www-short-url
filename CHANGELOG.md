@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- [done] Override minimatch to 11.x to patch GHSA-g3hv-75wg-m249 (2026-11-16)
 - [done] Add batch short-link inspection and problem-row copying (2026-10-22) → docs/features/url-decoding.md
 - [done] Tech Debt (2026-08-02)
 
